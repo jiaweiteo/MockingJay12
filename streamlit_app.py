@@ -16,6 +16,7 @@ st.set_page_config(
 pages = {
     'Home': [
         st.Page('pages/home.py', title='Home', icon='🏠'), #Overview of all meetings, create meeting
+        st.Page('pages/meeting.py', title='Meeting', icon='💼'),
     ],
     'Pre-Meeting': [
         st.Page('pages/agenda.py', title='Agenda', icon='📜'),
