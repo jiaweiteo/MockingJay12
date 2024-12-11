@@ -1,5 +1,11 @@
 from datetime import datetime
 
+def date_string_to_date_obj(date_string):
+    return datetime.strptime(date_string, "%Y-%m-%d")
+
+def time_string_to_datetime_obj(time_string, time_format="%H:%M"):
+    return datetime.strptime(time_string, time_format)
+
 def format_date(date_string):
     date_obj = datetime.strptime(date_string, "%Y-%m-%d")
     formatted_date = date_obj.strftime("%b %d, %Y")
@@ -15,9 +21,7 @@ def combine_date_and_time(date_str, time_str, date_format="%Y-%m-%d", time_forma
 
 def datetime_string_to_date_and_time_object(date_time_string):
     datetime_object = datetime.fromisoformat(date_time_string)
-    print(datetime_object)
     # Extract the date object
     date_object = datetime_object.date()
-    time_object = datetime_object.time
-    print(date_object, time_object)
-    return date_object,time_object()
+    time_object = datetime_object.time()
+    return date_object,time_object

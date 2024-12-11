@@ -28,7 +28,6 @@ custom_css="""
 @st.dialog("HODM Details")
 def handle_event_click(event):
     meeting = event["eventClick"]["event"]
-    print(meeting)
     meeting_url = f"/meeting?id={meeting['id']}"  # Link to card details page
     date, start_time = datetime_string_to_date_and_time_object(meeting['start'])
     _, end_time = datetime_string_to_date_and_time_object(meeting['end'])

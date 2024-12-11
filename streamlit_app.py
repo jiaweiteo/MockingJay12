@@ -2,8 +2,6 @@ from collections import defaultdict
 from pathlib import Path
 
 import streamlit as st
-import altair as alt
-import pandas as pd
 from st_pages import hide_pages
 
 # Set the title and favicon that appear in the Browser's tab bar.
@@ -22,7 +20,7 @@ role = st.session_state.role
 home_page = st.Page('pages/home.py', title='Overview', icon='🏠')
 
 meeting_page = st.Page('pages/meeting/meeting.py', title='Meeting', icon='💼')
-meeting_form_page = st.Page('pages/meeting/meetingForm.py', title='New/Edit Meeting', icon='➕', url_path="/form")
+meeting_form_page = st.Page('pages/meeting/meetingForm.py', title='New/Edit Meeting', icon='➕', url_path="/meeting-form")
 
 agenda_page = st.Page('pages/agenda.py', title='Agenda', icon='📜')
 minutes_page = st.Page('pages/minutes.py', title='Note-Taking', icon='📝')
