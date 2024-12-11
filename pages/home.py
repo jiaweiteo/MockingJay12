@@ -90,6 +90,7 @@ with leftCol:
 
     # Fetch card data from the database
     meetings = load_meeting_data()
+    meetings = sorted(meetings, key=lambda x: x["meetingDate"])
 
     # Convert meetings to events
     events = [{
