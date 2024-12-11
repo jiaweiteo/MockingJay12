@@ -1,8 +1,9 @@
 import streamlit as st
-from backend.controller.meetingController import fetch_meeting_by_id
+from backend.controller.meetingController import fetch_meeting_by_id, create_meeting, update_meeting
 from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 from datetime import datetime
 
+meeting_id = None
 if st.query_params.get('id') is not None:
     meeting_id = st.query_params['id']
     meeting_details = fetch_meeting_by_id(meeting_id)
@@ -13,6 +14,7 @@ else:
     st.title("Create HODM Meeting")
 
 title = date = description = startTime = endTime = totalDuration = location = None
+create_button = update_button = cancel_button = None
 
 if meeting_details is not None:
     title = meeting_details["meetingTitle"]
@@ -23,6 +25,7 @@ if meeting_details is not None:
     totalDuration = meeting_details["totalDuration"]
     location = meeting_details["location"]
 
+print(startTime)
 # Meeting Form
 with st.form("meeting_form"):
     st.header("Meeting Details")
@@ -43,24 +46,52 @@ with st.form("meeting_form"):
     # Submit and Cancel buttons side by side
     empty_col, button_col1, button_col2 = st.columns([10,1,1])  # Equal width columns for buttons
     with button_col1:
-        submit_button = st.form_submit_button("Submit")
+        if meeting_id is not None:
+            update_button = st.form_submit_button("Update")
+        else:
+            create_button = st.form_submit_button("Create")
     with button_col2:
         cancel_button = st.form_submit_button("Cancel")
     
+
     # Process form submission
-    if submit_button:
+    if create_button:
+        total_duration = (datetime.combine(meeting_date, end_time) - datetime.combine(meeting_date, start_time)).total_seconds()/60
+        meeting_data = {
+            "meetingTitle": meeting_title,
+            "meetingDate": meeting_date,
+            "description": description,
+            "startTime": str(start_time),
+            "endTime": str(end_time),
+            "totalDuration": total_duration,
+            "minutesLeft": total_duration,
+            "minutesTaken": 0,
+            "location": location,
+            "createdBy": "Admin",
+            "createdOn": datetime.now().timestamp()
+        }
+        create_meeting(meeting_data)
         st.success("Meeting details submitted successfully!")
         st.write("Here is the submitted data:")
-        st.write({
-            "Meeting Title": meeting_title,
-            "Meeting Date": meeting_date,
-            "Description": description,
-            "Start Time": start_time,
-            "End Time": end_time,
-            "Total Duration": (datetime.combine(meeting_date, end_time) - datetime.combine(meeting_date, start_time)).total_seconds()/60,
-            "Location": location,
-            "Created By": "Admin",
-            "Created On": datetime.now(),
-        })
+        st.write(meeting_data)
+    elif update_button:
+        total_duration = (datetime.combine(meeting_date, end_time) - datetime.combine(meeting_date, start_time)).total_seconds()/60
+        meeting_data = {
+            "meetingTitle": meeting_title,
+            "meetingDate": meeting_date,
+            "description": description,
+            "startTime": str(start_time),
+            "endTime": str(end_time),
+            "totalDuration": total_duration,
+            "minutesLeft": total_duration,
+            "minutesTaken": 0,
+            "location": location,
+        }
+        update_meeting(meeting_id, meeting_data)
+        st.success("Meeting details updated successfully!")
+        st.write("Here is the submitted data:")
+        st.write(meeting_data)
+
+
     elif cancel_button:
         st.warning("Form submission canceled.")

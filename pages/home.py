@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 
 from backend.controller.meetingController import *
 from streamlit_calendar import calendar
@@ -112,7 +111,7 @@ with rightCol:
     with innerLeftCol:
         st.subheader("Upcoming HODM Meetings")
     with innerRightCol:
-        st.link_button(label="New Meeting", icon="➕", url="/meeting")
+        st.link_button(label="New Meeting", icon="➕", url="/meeting-form")
     # Render cards
     for meeting in meetings:
         render_meeting_card(meeting)

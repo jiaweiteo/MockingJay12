@@ -47,12 +47,12 @@ def initialize_meeting_data(conn):
         INSERT INTO meeting
             (meetingTitle, meetingDate, description, startTime, endTime, totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn)
         VALUES
-            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00', '17:30', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082),
-            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00', '17:30', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082),
-            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00', '17:30', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082),
-            ('04/25', '2025-02-23', 'Almost Full', '15:00', '17:30', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082),
-            ('05/25', '2025-03-06', 'Test', '15:00', '17:30', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082),
-            ('06/25', '2025-03-20', 'No Slots Left', '15:00', '17:30', 150, 100, 50, "Simei", 'Jia Wei', 1733825082)
+            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00:00', '17:30:00', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082),
+            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00:00', '17:30:00', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082),
+            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00:00', '17:30:00', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082),
+            ('04/25', '2025-02-23', 'Almost Full', '15:00:00', '17:30:00', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082),
+            ('05/25', '2025-03-06', 'Test', '15:00:00', '17:30:00', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082),
+            ('06/25', '2025-03-20', 'No Slots Left', '15:00:00', '17:30:00', 150, 100, 50, "Simei", 'Jia Wei', 1733825082)
         """
     )
     conn.commit()
@@ -106,54 +106,81 @@ def fetch_upcoming_meeting():
     # Return the result as a dictionary
     return dict(row) if row else None
 
-# def update_meeting_data(conn, df, changes):
-#     """Updates the meeting data in the database."""
-#     cursor = conn.cursor()
+def create_meeting(meeting_details):
+    required_keys = [
+        "meetingTitle", "meetingDate", "description", "startTime", "endTime",
+        "totalDuration", "minutesLeft", "minutesTaken", "location", "createdBy", "createdOn"
+    ]
 
-#     if changes["edited_rows"]:
-#         deltas = st.session_state.meeting_table["edited_rows"]
-#         rows = []
+    # Validate that all required keys are present
+    for key in required_keys:
+        if key not in meeting_details:
+            raise ValueError(f"Missing required field: {key}")
 
-#         for i, delta in deltas.items():
-#             row_dict = df.iloc[i].to_dict()
-#             row_dict.update(delta)
-#             rows.append(row_dict)
+    # SQL query to insert a new meeting
+    query = """
+    INSERT INTO meeting (
+        meetingTitle, meetingDate, description, startTime, endTime,
+        totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
 
-#         cursor.executemany(
-#             """
-#             UPDATE meeting
-#             SET
-#                 item_name = :item_name,
-#                 price = :price,
-#                 units_sold = :units_sold,
-#                 units_left = :units_left,
-#                 cost_price = :cost_price,
-#                 reorder_point = :reorder_point,
-#                 description = :description
-#             WHERE id = :id
-#             """,
-#             rows,
-#         )
+    # Extract values from meeting_details dictionary
+    values = tuple(meeting_details[key] for key in required_keys)
 
-#     if changes["added_rows"]:
-#         cursor.executemany(
-#             """
-#             INSERT INTO meeting
-#                 (id, item_name, price, units_sold, units_left, cost_price, reorder_point, description)
-#             VALUES
-#                 (:id, :item_name, :price, :units_sold, :units_left, :cost_price, :reorder_point, :description)
-#             """,
-#             (defaultdict(lambda: None, row) for row in changes["added_rows"]),
-#         )
+    # Connect to the database and execute the query
+    try:
+        conn, _ = connect_meeting_db()
+        cursor = conn.cursor()
+        cursor.execute(query, values)
+        conn.commit()
+        print("Meeting successfully added.")
 
-#     if changes["deleted_rows"]:
-#         cursor.executemany(
-#             "DELETE FROM meeting WHERE id = :id",
-#             ({"id": int(df.loc[i, "id"])} for i in changes["deleted_rows"]),
-#         )
+    except sqlite3.Error as e:
+        print(f"An error occurred while inserting the meeting: {e}")
 
-#     conn.commit()
+    conn.close()
 
+def update_meeting(meeting_id, updates):
+    if not updates:
+        raise ValueError("Updates dictionary cannot be empty.")
 
-# -----------------------------------------------------------------------------
+    # Construct the SQL query dynamically based on the updates
+    set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
+    query = f"""
+    UPDATE meeting
+    SET {set_clause}
+    WHERE id = ?
+    """
 
+    # Prepare the values for the query
+    values = tuple(updates.values()) + (meeting_id,)
+
+    # Connect to the database and execute the query
+    try:
+        conn, _ = connect_meeting_db()
+        cursor = conn.cursor()
+        cursor.execute(query, values)
+        conn.commit()
+        print("Meeting successfully updated.")
+    except sqlite3.Error as e:
+        print(f"An error occurred while updating the meeting: {e}")
+
+    conn.close()
+
+def delete_meeting(meeting_id):
+    query = """
+    DELETE FROM meeting
+    WHERE id = ?
+    """
+
+    try:
+        conn, _ = connect_meeting_db()
+        cursor = conn.cursor()
+        cursor.execute(query, (meeting_id,))
+        conn.commit()
+        print("Meeting successfully deleted.")
+    except sqlite3.Error as e:
+        print(f"An error occurred while deleting the meeting: {e}")
+
+    conn.close()
