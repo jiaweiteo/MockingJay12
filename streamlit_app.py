@@ -26,7 +26,7 @@ item_form_page = st.Page('pages/preMeeting/itemForm.py', title='New Item', icon=
 minutes_page = st.Page('pages/minutes.py', title='Note-Taking', icon='📝')
 
 dependencies_page = st.Page('pages/dependencies.py', title='Dependencies')
-cdh_page = st.Page('pages/cdh.py', title='CDH')
+database_page = st.Page('pages/database.py', title='Database')
 settings_page = st.Page('pages/settings.py', title='Settings', icon='⚙️')
 
 general_pages = [home_page, meeting_page, item_form_page, settings_page]
@@ -45,7 +45,7 @@ secretariat_pages = {
     ],
     'Admin': [
         dependencies_page,
-        cdh_page,
+        database_page,
         settings_page
     ]
 }

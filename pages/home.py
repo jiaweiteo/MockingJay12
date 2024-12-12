@@ -73,20 +73,20 @@ leftCol, rightCol = st.columns(2)
 
 with leftCol:
     """
-    **This is a single-stop platform for managing HODM processes and progress**
+    **This is a single-stop platform for managing DM processes and progress**
 
-    ### HOD Meeting (HODM)
+    ### Department Meeting (DM)
     Purpose:
 
-    1. Approve implementation of Workplans and major organisation-level initiatives & policies
+    1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
-    2. Approve first cut concepts & implementation of minor organisation-level initiatives & policies
+    2.  Quisque eu mattis sapien. Cras dapibus ac leo nec ultricies.
 
-    (Note: Use HODM if your item requires input from a majority of the HODs).
+    (Note: Cras egestas vulputate massa, sed tristique metus malesuada eget.).
 
-    **Frequency: Twice monthly, 2.5hrs**
+    **Frequency: Cras id laoreet mi**
 
-    **Secretariat Email: test@gmail.com**
+    **Email: test@gmail.com**
     """
 
     # Fetch card data from the database
@@ -111,7 +111,7 @@ with leftCol:
 with rightCol:
     innerLeftCol, innerRightCol = st.columns([3,1])
     with innerLeftCol:
-        st.subheader("Upcoming HODM Meetings")
+        st.subheader("Upcoming DM Meetings")
     with innerRightCol:
         if st.session_state.role == Role.SECRETARIAT.value:
             st.link_button(label="New Meeting", icon="➕", url="/meeting-form")

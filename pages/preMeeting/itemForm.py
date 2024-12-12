@@ -10,7 +10,7 @@ import numpy as np
 
 
 purposeLookup = ["Tier 1 (For Approval)", "Tier 1 (For Discussion)", "Tier 2 (For Information)"]
-selectLookup = ["Select", "Non-Select"]
+selectLookup = ["Non-Select", "Select"]
 
 def get_meeting_id(meetings_df, formatted_value):
     """
@@ -128,7 +128,7 @@ def register_item_page():
             index=selectLookup.index(get_select_string_value(item_details["selectFlag"])) if item_details.get("selectFlag") is not None else 0
         )
         
-        form_data_dict["duration"] = st.number_input("Duration (minutes)", min_value=5, max_value=150, step=5, value=item_details.get("duration", 5))
+        form_data_dict["duration"] = st.number_input("Duration (minutes)", min_value=5, max_value=30, step=5, value=item_details.get("duration", 5))
         form_data_dict["item_owner"] = st.text_input("Item Owner", placeholder="Enter the item owner's name", value=item_details.get("itemOwner", ""))
         
         print(item_details)

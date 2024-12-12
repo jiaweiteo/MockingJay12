@@ -14,7 +14,8 @@ import pandas as pd
 def connect_db():
     """Connects to the sqlite database."""
 
-    DB_FILENAME = Path(__file__).parent / "inventory.db"
+    DB_FILENAME = Path(__file__).parent.parent.parent / "backend" / "database" / "inventory.db"
+    print(DB_FILENAME)
     db_already_exists = DB_FILENAME.exists()
 
     conn = sqlite3.connect(DB_FILENAME)

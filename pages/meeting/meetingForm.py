@@ -3,6 +3,14 @@ from backend.controller.meetingController import fetch_meeting_by_id, create_mee
 from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 from datetime import datetime
 
+# Callback function to update end time
+def update_end_time():
+    global start_time, end_time
+    if start_time:
+        start_datetime = datetime.datetime.combine(datetime.date.today(), start_time)
+        end_datetime = start_datetime + datetime.timedelta(hours=2)
+        end_time = end_datetime.time()
+
 meeting_id = None
 if st.query_params.get('id') is not None:
     meeting_id = st.query_params['id']
@@ -13,6 +21,7 @@ else:
     meeting_details = None
     st.title("Create HODM Meeting")
 
+start_time = end_time = None
 title = date = description = startTime = endTime = totalDuration = location = None
 create_button = update_button = cancel_button = None
 
@@ -38,7 +47,6 @@ with st.form("meeting_form"):
     col1, col2 = st.columns(2)
     with col1:
         start_time = st.time_input("Start Time", value=time_string_to_datetime_obj(startTime) if startTime is not None else None)
-
     with col2:
         end_time = st.time_input("End Time", value=time_string_to_datetime_obj(endTime) if endTime is not None else None)
         
