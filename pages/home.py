@@ -3,6 +3,7 @@ import streamlit as st
 from backend.controller.meetingController import *
 from streamlit_calendar import calendar
 from utils.dateUtils import *
+from utils.constants import Role
 
 calendar_options = {
     "editable": "true",
@@ -112,7 +113,8 @@ with rightCol:
     with innerLeftCol:
         st.subheader("Upcoming HODM Meetings")
     with innerRightCol:
-        st.link_button(label="New Meeting", icon="➕", url="/meeting-form")
+        if st.session_state.role == Role.SECRETARIAT.value:
+            st.link_button(label="New Meeting", icon="➕", url="/meeting-form")
     # Render cards
     for meeting in meetings:
         render_meeting_card(meeting)

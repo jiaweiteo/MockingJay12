@@ -3,10 +3,6 @@ from pathlib import Path
 import sqlite3
 import pandas as pd
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
-
-
 def connect_meeting_db():
     """Connects to the sqlite database."""
 
@@ -67,8 +63,39 @@ def load_meeting_data():
     """Loads the meeting data from the database."""
     cursor = conn.cursor()
 
+    query = """
+    SELECT *
+    FROM meeting
+    WHERE meetingDate >= DATE('now')
+    ORDER BY meetingDate ASC, startTime ASC
+    """
+
     try:
-        cursor.execute("SELECT * FROM meeting")
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        data = [dict(row) for row in rows]
+    except:
+        return None
+    
+    conn.close()
+    return data
+
+def load_past_meeting_data():
+    conn, _ = connect_meeting_db()
+    conn.row_factory = sqlite3.Row
+
+    """Loads the meeting data from the database."""
+    cursor = conn.cursor()
+
+    query = """
+    SELECT *
+    FROM meeting
+    WHERE meetingDate < DATE('now')
+    ORDER BY meetingDate ASC, startTime ASC
+    """
+
+    try:
+        cursor.execute(query)
         rows = cursor.fetchall()
         data = [dict(row) for row in rows]
     except:

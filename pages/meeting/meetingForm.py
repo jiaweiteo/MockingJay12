@@ -25,7 +25,6 @@ if meeting_details is not None:
     totalDuration = meeting_details["totalDuration"]
     location = meeting_details["location"]
 
-print(startTime)
 # Meeting Form
 with st.form("meeting_form"):
     st.header("Meeting Details")
@@ -43,16 +42,12 @@ with st.form("meeting_form"):
     with col2:
         end_time = st.time_input("End Time", value=time_string_to_datetime_obj(endTime) if endTime is not None else None)
         
-    # Submit and Cancel buttons side by side
-    empty_col, button_col1, button_col2 = st.columns([10,1,1])  # Equal width columns for buttons
+    empty_col, button_col1 = st.columns([15,1])  # Equal width columns for buttons
     with button_col1:
         if meeting_id is not None:
-            update_button = st.form_submit_button("Update")
+            update_button = st.form_submit_button("Update Meeting")
         else:
-            create_button = st.form_submit_button("Create")
-    with button_col2:
-        cancel_button = st.form_submit_button("Cancel")
-    
+            create_button = st.form_submit_button("Create Meeting")    
 
     # Process form submission
     if create_button:
@@ -91,7 +86,3 @@ with st.form("meeting_form"):
         st.success("Meeting details updated successfully!")
         st.write("Here is the submitted data:")
         st.write(meeting_data)
-
-
-    elif cancel_button:
-        st.warning("Form submission canceled.")

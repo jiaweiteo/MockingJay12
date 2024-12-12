@@ -1,6 +1,7 @@
 import streamlit as st
+from utils.constants import Role
 
-ROLES = [None, "ItemOwner", "Secretariat"]
+ROLES = [Role.GENERAL.value, Role.ITEM_OWNER.value, Role.SECRETARIAT.value]
 
 st.header("Change Role (DEV Only)")
 role = st.selectbox("Choose your role", ROLES)
