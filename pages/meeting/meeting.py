@@ -63,7 +63,7 @@ def handle_delete_meeting(meeting_id, title):
     st.markdown(
         f"""
             <div style="border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px 0; background-color: #f9f9f9;">
-                <h4 style="margin: 0; color: #333;">Are you sure you want to delete {title} HODM meeting?</h4>
+                <h4 style="margin: 0; color: #333;">Are you sure you want to delete {title} DM meeting?</h4>
             </div>
         """,
         unsafe_allow_html=True,
@@ -105,7 +105,7 @@ def display_meeting():
         created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H:%M:%S")
 
         # Page title
-        st.title(meeting_details["meetingTitle"] + " HODM Meeting")
+        st.title(meeting_details["meetingTitle"] + " DM Meeting")
         st.subheader(meeting_details["description"])
 
         # Display meeting information

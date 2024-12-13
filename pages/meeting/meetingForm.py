@@ -15,11 +15,11 @@ meeting_id = None
 if st.query_params.get('id') is not None:
     meeting_id = st.query_params['id']
     meeting_details = fetch_meeting_by_id(meeting_id)
-    st.title("Edit HODM Meeting")
+    st.title("Edit DM Meeting")
 
 else:
     meeting_details = None
-    st.title("Create HODM Meeting")
+    st.title("Create DM Meeting")
 
 start_time = end_time = None
 title = date = description = startTime = endTime = totalDuration = location = None

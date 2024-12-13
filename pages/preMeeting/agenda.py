@@ -167,7 +167,7 @@ def update_data(conn, df, changes):
 """
 # :calendar: MockingJay
 
-**This is a single-stop platform for managing HODM processes and progress**
+**This is a single-stop platform for managing DM processes and progress**
 """
 
 st.info(

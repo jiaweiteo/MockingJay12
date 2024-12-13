@@ -93,9 +93,9 @@ def register_item_page():
 
     # Display the meeting ID
     if item_id is None:
-        st.title("Item Registration for HODM")
+        st.title("Item Registration for DM")
     else:
-        st.title("Edit Item for HODM")
+        st.title("Edit Item for DM")
 
     # Meeting Item Form
     with st.form("register_item_form"):

@@ -25,7 +25,7 @@ custom_css="""
     }
 """
 
-@st.dialog("HODM Details")
+@st.dialog("DM Details")
 def handle_event_click(event):
     meeting = event["eventClick"]["event"]
     meeting_url = f"/meeting?id={meeting['id']}"  # Link to card details page
@@ -34,7 +34,7 @@ def handle_event_click(event):
     st.markdown(
         f"""
             <div style="border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px 0; background-color: #f9f9f9;">
-                <h4 style="margin: 0; color: #333;">{meeting['title']} HODM</h4>
+                <h4 style="margin: 0; color: #333;">{meeting['title']} DM</h4>
                 <p style="color: #666;">
                     Date: {format_date(date.strftime("%Y-%m-%d"))}<br>
                     Start Time: {start_time}<br>
@@ -53,7 +53,7 @@ def render_meeting_card(meeting):
         f"""
         <a target="_self" href="{meeting_url}" style="text-decoration: none;">
             <div style="border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin: 5px 0; background-color: #f9f9f9;">
-                <h4 style="margin: 0; color: #333;">{meeting['meetingTitle']} HODM</h4>
+                <h4 style="margin: 0; color: #333;">{meeting['meetingTitle']} DM</h4>
                 <h6 style="color: #666;">{meeting['description']}</h6>
                 <p style="color: #666;">
                     Time: {formatted_date}, {meeting['startTime']} - {meeting['endTime']}
