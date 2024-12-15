@@ -11,6 +11,10 @@ calendar_options = {
 }
 
 custom_css="""
+    .fc {
+        font-family: 'Poppins', sans-serif !important;
+    }
+    
     .fc-event-past {
         opacity: 0.8;
     }
@@ -103,7 +107,11 @@ with leftCol:
             } 
             for m in meetings]
 
-    state = calendar(events=events, options=calendar_options, custom_css=custom_css)
+    state = calendar(
+        events=events,
+        options=calendar_options,
+        custom_css=custom_css
+        )
 
     if state.get("callback") is not None and state.get("callback") == "eventClick":
         handle_event_click(state)

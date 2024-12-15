@@ -128,7 +128,7 @@ def register_item_page():
             index=selectLookup.index(get_select_string_value(item_details["selectFlag"])) if item_details.get("selectFlag") is not None else 0
         )
         
-        form_data_dict["duration"] = st.number_input("Duration (minutes)", min_value=5, max_value=30, step=5, value=item_details.get("duration", 5))
+        form_data_dict["duration"] = st.number_input("Duration (minutes)", min_value=5, max_value=30, step=5, value=item_details.get("duration", 15))
         form_data_dict["item_owner"] = st.text_input("Item Owner", placeholder="Enter the item owner's name", value=item_details.get("itemOwner", ""))
         
         print(item_details)
@@ -142,7 +142,7 @@ def register_item_page():
         )
         
         # Submit button
-        _, button_col1 = st.columns([15,1])  # Equal width columns for buttons
+        _, button_col1, = st.columns([15, 1])  # Equal width columns for buttons
         with button_col1:
             if item_id is None:
                 register = st.form_submit_button("Register Item")

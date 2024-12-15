@@ -1,14 +1,14 @@
 import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, create_meeting, update_meeting
-from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 from datetime import datetime
+from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 
 # Callback function to update end time
 def update_end_time():
     global start_time, end_time
     if start_time:
         start_datetime = datetime.datetime.combine(datetime.date.today(), start_time)
-        end_datetime = start_datetime + datetime.timedelta(hours=2)
+        end_datetime = start_datetime + datetime.timedelta(hours=2.5)
         end_time = end_datetime.time()
 
 meeting_id = None
@@ -50,7 +50,7 @@ with st.form("meeting_form"):
     with col2:
         end_time = st.time_input("End Time", value=time_string_to_datetime_obj(endTime) if endTime is not None else None)
         
-    empty_col, button_col1 = st.columns([15,1])  # Equal width columns for buttons
+    empty_col, button_col1 = st.columns([15, 1])  # Equal width columns for buttons
     with button_col1:
         if meeting_id is not None:
             update_button = st.form_submit_button("Update Meeting")

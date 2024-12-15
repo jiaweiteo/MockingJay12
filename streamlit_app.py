@@ -10,6 +10,23 @@ st.set_page_config(
     layout="wide"
 )
 
+css = '''
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Source+Code+Pro:wght@300;400;600&display=swap');
+
+html * {
+    font-family: 'Poppins', sans-serif !important;
+}
+'''
+
+st.markdown(
+        f"""
+        <style>
+        {css}    
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # Retrieve role from keycloak headers through OPA policy
 if "role" not in st.session_state:
     st.session_state.role = Role.SECRETARIAT.value
