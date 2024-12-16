@@ -2,6 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 from utils.constants import Role
 import streamlit as st
+from streamlit.source_util import get_pages
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(

@@ -2,6 +2,7 @@ import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, create_meeting, update_meeting
 from datetime import datetime, time, timedelta
 from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
+from streamlit_extras.switch_page_button import switch_page 
 
 # Callback function to update end time
 def update_end_time(current_time):
@@ -79,6 +80,7 @@ with st.form("meeting_form"):
         st.success("Meeting details submitted successfully!")
         st.write("Here is the submitted data:")
         st.write(meeting_data)
+        switch_page("home")
     elif update_button:
         total_duration = (datetime.combine(meeting_date, end_time) - datetime.combine(meeting_date, start_time)).total_seconds()/60
         meeting_data = {
@@ -96,3 +98,5 @@ with st.form("meeting_form"):
         st.success("Meeting details updated successfully!")
         st.write("Here is the submitted data:")
         st.write(meeting_data)
+        switch_page("home")
+        

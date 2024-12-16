@@ -172,3 +172,12 @@ def get_sorted_items_by_id(meeting_id):
     df["purpose_order"] = df["purpose"].map(purpose_order)
     sorted_df = df.sort_values(by="purpose_order").drop(columns=["purpose_order"])
     return sorted_df.to_dict(orient="records")
+
+def get_total_duration(meeting_id: int) -> int:
+    """
+    Returns the total duration of all items for a given meeting ID.
+    """
+    with connect_item_db() as conn:
+        query = "SELECT SUM(duration) AS total_duration FROM Item WHERE meetingId = ?;"
+        result = conn.execute(query, (meeting_id,)).fetchone()
+        return result[0] if result[0] is not None else 0  # Return 0 if no items are found

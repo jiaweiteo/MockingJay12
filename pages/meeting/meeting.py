@@ -1,9 +1,10 @@
 import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, fetch_upcoming_meeting, delete_meeting
-from backend.controller.itemController import get_sorted_items_by_id, delete_item
+from backend.controller.itemController import get_sorted_items_by_id, delete_item, get_total_duration
 from datetime import datetime
 from utils.dateUtils import *
 from utils.constants import Role
+from streamlit_extras.switch_page_button import switch_page 
 
 def get_status_color(status):
     """
@@ -50,7 +51,7 @@ def display_items(items):
 
 def confirm_delete_meeting(meeting_id):
     delete_meeting(meeting_id)
-    st.rerun()
+    switch_page("home")
 
 def confirm_delete_item(item_id, title):
     delete_item(item_id)
@@ -133,11 +134,13 @@ def display_meeting():
 
             # Right column content
             with col2:
+                total_minutes = meeting_details['totalDuration']
+                minutes_taken = get_total_duration(meeting_id)
                 st.subheader("Demand", divider=True)
-                st.write(f"**Duration:** {meeting_details['totalDuration']} minutes")
-                st.write(f"**Time Taken:** {meeting_details['minutesTaken']}")
-                st.write(f"**Time Left:** {meeting_details['minutesLeft']}")
-                st.progress(meeting_details["minutesTaken"] / meeting_details['totalDuration'])
+                st.write(f"**Duration:** {total_minutes} minutes")
+                st.write(f"**Time Taken:** {minutes_taken}")
+                st.write(f"**Time Left:** {total_minutes - minutes_taken}")
+                st.progress(minutes_taken / total_minutes)
                 st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.delete_meeting_modal:

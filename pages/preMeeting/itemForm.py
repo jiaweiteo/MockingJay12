@@ -7,7 +7,7 @@ import pandas as pd
 from utils.constants import Item_Status
 from datetime import datetime
 import numpy as np
-
+from streamlit_extras.switch_page_button import switch_page 
 
 purposeLookup = ["Tier 1 (For Approval)", "Tier 1 (For Discussion)", "Tier 2 (For Information)"]
 selectLookup = ["Non-Select", "Select"]
@@ -63,6 +63,7 @@ def handle_form_submission(meeting_id, form_data_dict):
     created_item = create_item(item_data)
     st.success(f"Item '{created_item['title']}' successfully created!")
     st.write(item_data)
+    switch_page("home")
     return created_item
 
 # Function to parse form inputs and create the item
@@ -72,6 +73,7 @@ def handle_form_update(meeting_id, item_id, form_data_dict):
     updated_item = update_item(item_id, item_data)
     st.success(f"Item '{updated_item['title']}' successfully updated")
     st.write(item_data)
+    switch_page("home")
     return updated_item
 
 def register_item_page():
