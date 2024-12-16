@@ -1,15 +1,13 @@
 import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, create_meeting, update_meeting
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 
 # Callback function to update end time
-def update_end_time():
-    global start_time, end_time
-    if start_time:
-        start_datetime = datetime.datetime.combine(datetime.date.today(), start_time)
-        end_datetime = start_datetime + datetime.timedelta(hours=2.5)
-        end_time = end_datetime.time()
+def update_end_time(current_time):
+    current_date_time = datetime.combine(datetime.now(), current_time)
+    new_end_time = current_date_time + timedelta(hours=2.5)
+    return new_end_time.time()
 
 meeting_id = None
 if st.query_params.get('id') is not None:
@@ -22,15 +20,19 @@ else:
     st.title("Create DM Meeting")
 
 start_time = end_time = None
-title = date = description = startTime = endTime = totalDuration = location = None
+title = date = description = totalDuration = location = None
 create_button = update_button = cancel_button = None
+
+startTime = time(15, 0)
+endTime = update_end_time(startTime)
+
 
 if meeting_details is not None:
     title = meeting_details["meetingTitle"]
     date = meeting_details["meetingDate"]
     description = meeting_details["description"]
-    startTime = meeting_details["startTime"]
-    endTime = meeting_details["endTime"]
+    startTime = time_string_to_datetime_obj(meeting_details["startTime"])
+    endTime = time_string_to_datetime_obj(meeting_details["endTime"])
     totalDuration = meeting_details["totalDuration"]
     location = meeting_details["location"]
 
@@ -46,9 +48,9 @@ with st.form("meeting_form"):
 
     col1, col2 = st.columns(2)
     with col1:
-        start_time = st.time_input("Start Time", value=time_string_to_datetime_obj(startTime) if startTime is not None else None)
+        start_time = st.time_input("Start Time", value=startTime)
     with col2:
-        end_time = st.time_input("End Time", value=time_string_to_datetime_obj(endTime) if endTime is not None else None)
+        end_time = st.time_input("End Time", value=endTime)
         
     empty_col, button_col1 = st.columns([15, 1])  # Equal width columns for buttons
     with button_col1:
