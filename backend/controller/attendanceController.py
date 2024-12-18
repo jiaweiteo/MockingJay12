@@ -521,6 +521,7 @@ def default_nonselect_attendance_for_meetingid(meeting_id, item_id_list):
     attendance_cursor.execute(item_owner_query, (meeting_id,))
     additional_attendees_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, 'Y', 'AdditionalAttendee', '' from additional_attendees where meeting_id == ?;"
     attendance_cursor.execute(additional_attendees_query, (meeting_id,))
+    attendance_conn.commit()
     attendance_conn.close()
 
 
