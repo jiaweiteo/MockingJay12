@@ -5,6 +5,7 @@ from streamlit_calendar import calendar
 from utils.dateUtils import *
 from utils.constants import Role
 
+from backend.controller.attendanceController import fetch_secretariat_data, fetch_coremembers_data, update_coremember_secretariat_data
 calendar_options = {
     "editable": "true",
     "selectable": "true",    
@@ -126,3 +127,74 @@ with rightCol:
     # Render cards
     for meeting in meetings:
         render_meeting_card(meeting)
+
+
+with st.container():
+    st.subheader("Main Attendees", divider="green")
+
+    data = fetch_coremembers_data()
+    df = pd.DataFrame(
+        data,
+        columns=["PerNum", "Name", "Designation", "Role"]
+        )
+    if st.session_state.role == Role.SECRETARIAT.value:
+        edited_df = st.data_editor(
+            df, 
+            disabled=["Name", "Designation"],
+            column_config={
+                "PerNum": st.column_config.NumberColumn(format="%d")
+            },
+            num_rows = "dynamic",
+            key="coremembers"
+            )
+        has_uncommitted_changes = any(len(v) for v in st.session_state.coremembers.values())
+        
+        st.button(
+            "Commit changes",
+            disabled=not has_uncommitted_changes,
+            # Update data in database
+            on_click=update_coremember_secretariat_data,
+            args=(df, st.session_state.coremembers,'coremembers'),
+            key='coremembers_commit'
+            )
+
+    else:
+         edited_df = st.dataframe(
+            df, 
+            key="coremembers"
+            )
+
+with st.container():
+    st.subheader("Secretariat Team", divider="blue")
+
+    data = fetch_secretariat_data()
+    df = pd.DataFrame(
+        data,
+        columns=["PerNum", "Name", "Designation"]
+        )
+    if st.session_state.role == Role.SECRETARIAT.value:
+        edited_df = st.data_editor(
+            df, 
+            disabled=["Name", "Designation"],
+            column_config={
+                "PerNum": st.column_config.NumberColumn(format="%d")
+            },
+            num_rows = "dynamic",
+            key="secretariat"
+            )
+        has_uncommitted_changes = any(len(v) for v in st.session_state.secretariat.values())
+        
+        st.button(
+            "Commit changes",
+            disabled=not has_uncommitted_changes,
+            # Update data in database
+            on_click=update_coremember_secretariat_data,
+            args=(df, st.session_state.secretariat,'secretariat'),
+            key='secretariat_commit'
+            )
+
+    else:
+         edited_df = st.dataframe(
+            df, 
+            key="secretariat"
+            )       
