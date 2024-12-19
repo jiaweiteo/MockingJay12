@@ -103,7 +103,7 @@ def display_meeting():
         st.title("No Meeting found. Invalid Meeting ID: " + meeting_id)
     else:
         # Convert UNIX timestamp to human-readable format
-        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H:%M:%S")
+        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H:%M")
 
         # Page title
         st.title(meeting_details["meetingTitle"] + " DM Meeting")

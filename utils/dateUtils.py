@@ -3,7 +3,7 @@ from datetime import datetime
 def date_string_to_date_obj(date_string):
     return datetime.strptime(date_string, "%Y-%m-%d")
 
-def time_string_to_datetime_obj(time_string, time_format="%H:%M:%S"):
+def time_string_to_datetime_obj(time_string, time_format="%H:%M"):
     return datetime.strptime(time_string, time_format)
 
 def format_date(date_string):
