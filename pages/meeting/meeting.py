@@ -118,9 +118,9 @@ def display_meeting():
             # Left column content
             with col1:
                 st.subheader("Details", divider="green")
-                st.write(f"**Date:** {format_date(meeting_details['meetingDate'])}")
-                st.write(f"**Time:** {meeting_details['startTime']} - {meeting_details['endTime']}")
-                st.write(f"**Location:** {meeting_details['location']}")
+                st.write(f"**Date:**       {format_date(meeting_details['meetingDate'])}")
+                st.write(f"**Time:**       {meeting_details['startTime']} - {meeting_details['endTime']}")
+                st.write(f"**Location:**:  {meeting_details['location']}")
                 st.write(f"**Created By:** {meeting_details['createdBy']} (Created on {created_on_date})")
                 st.markdown('</div>', unsafe_allow_html=True)
 
