@@ -1,3 +1,4 @@
+import streamlit as st
 from collections import defaultdict
 from pathlib import Path
 import sqlite3
@@ -7,7 +8,7 @@ import pandas as pd
 # Mock data for full personnel database
 def connect_personnel_db():
     """Connects to the personnel sqlite database."""
-    DB_FILENAME = Path(__file__).parent / "personnel.db"
+    DB_FILENAME = Path(__file__).parent.parent/ "database" / "personnel.db"
     db_already_exists = DB_FILENAME.exists()
 
     conn = sqlite3.connect(DB_FILENAME)
@@ -99,7 +100,7 @@ def load_personnel_data():
 def connect_attendance_db():
     """Connects to the sqlite database."""
 
-    DB_FILENAME = Path(__file__).parent / "attendance.db"
+    DB_FILENAME = Path(__file__).parent.parent/ "database" / "attendance.db"
     db_already_exists = DB_FILENAME.exists()
 
     conn = sqlite3.connect(DB_FILENAME)
@@ -485,7 +486,7 @@ def initialize_nonselect_attendance_table(conn):
             designation TEXT,
             meeting_id INTEGER NOT NULL,
             item_id INTEGER NOT NULL,
-            attendance_flag TEXT CHECK(attendance_flag in ('Y','N')) ,
+            attendance_flag BOOLEAN NOT NULL ,
             role TEXT CHECK(role in ('HOD', 'Permanent', 'Secretariat', 'ItemOwner', 'AdditionalAttendee', 'DesignateReplacement')),
             remarks TEXT
         );
@@ -513,13 +514,13 @@ def default_nonselect_attendance_for_meetingid(meeting_id, item_id_list):
     attendance_conn, attendance_db_was_just_created = connect_attendance_db()
     attendance_cursor = attendance_conn.cursor()
     for item_id in item_id_list:
-        coremembers_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id},'Y', role, '' from coremembers;"
+        coremembers_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id}, TRUE, role, '' from coremembers;"
         attendance_cursor.execute(coremembers_query)
-        secretariat_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id},'Y', 'Secretariat', '' from secretariat;"
+        secretariat_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id},TRUE, 'Secretariat', '' from secretariat;"
         attendance_cursor.execute(secretariat_query)
-    item_owner_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, 'Y', 'ItemOwner', '' from item_owners where meeting_id == ?;"
+    item_owner_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, TRUE, 'ItemOwner', '' from item_owners where meeting_id == ?;"
     attendance_cursor.execute(item_owner_query, (meeting_id,))
-    additional_attendees_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, 'Y', 'AdditionalAttendee', '' from additional_attendees where meeting_id == ?;"
+    additional_attendees_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, TRUE, 'AdditionalAttendee', '' from additional_attendees where meeting_id == ?;"
     attendance_cursor.execute(additional_attendees_query, (meeting_id,))
     attendance_conn.commit()
     attendance_conn.close()
@@ -527,9 +528,9 @@ def default_nonselect_attendance_for_meetingid(meeting_id, item_id_list):
 
 def fetch_nonselect_attendance_by_meetingid(meeting_id):
     attendance_conn, attendance_db_was_just_created = connect_attendance_db()
-    conn.row_factory = sqlite3.rowcount
+    attendance_conn.row_factory = sqlite3.Row
     attendance_cursor = attendance_conn.cursor()
-    query = "SELECT DISTINCT perNum, name, designation, meeting_id, GROUP_CONCAT(item_id), GROUP_CONCAT(attendance_flag), role, GROUP_CONCAT(remarks) FROM nonselect_attendance WHERE meeting_id = ? GROUP BY perNum"
+    query = "SELECT perNum as PerNum, name as Name, designation as Designation, meeting_id as MeetingId, item_id as ItemID, attendance_flag as Attendance, role as Role, remarks as Remarks FROM nonselect_attendance WHERE meeting_id = ? order by perNum"
     rows = attendance_cursor.fetchall()
 
     try:
@@ -541,3 +542,43 @@ def fetch_nonselect_attendance_by_meetingid(meeting_id):
     
     attendance_conn.close()
     return data
+
+
+def update_nonselect_attendance_by_meetingid(df, changes, meeting_id):
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+
+    if changes["edited_rows"]:
+        deltas = st.session_state.nonselect_attendance["edited_rows"]
+        rows = []
+
+        for i, delta in deltas.items():
+            row_dict = df.iloc[i].to_dict()
+            row_dict.update(delta)
+            rows.append(row_dict)
+        attendance_cursor.executemany(
+            f"""
+            UPDATE nonselect_attendance
+            SET
+                attendance_flag = :Attendance,
+                remarks = :Remarks
+            WHERE perNum = :PerNum 
+            AND meeting_id = {meeting_id}
+            AND item_id = :ItemID
+            """,
+            rows,
+            )
+
+    if changes["deleted_rows"]:
+        rows = []
+        for i in changes["deleted_rows"]:
+            row_dict = df.iloc[i].to_dict()
+            rows.append(row_dict)
+
+        attendance_cursor.executemany(
+            f"DELETE FROM nonselect_attendance WHERE perNum = :PerNum AND meeting_id = {meeting_id} AND item_id = :ItemID",
+            rows,)
+
+    attendance_conn.commit()
+    attendance_conn.close()
