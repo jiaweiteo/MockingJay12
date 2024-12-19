@@ -18,12 +18,15 @@ custom_css="""
     .fc-event-past {
         opacity: 0.8;
     }
+
     .fc-event-time {
         font-style: italic;
     }
+
     .fc-event-title {
         font-weight: 700;
     }
+    
     .fc-toolbar-title {
         font-size: 2rem;
     }

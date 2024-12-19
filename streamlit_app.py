@@ -1,13 +1,13 @@
-from collections import defaultdict
-from pathlib import Path
-from utils.constants import Role
 import streamlit as st
-from streamlit.source_util import get_pages
+from utils.constants import Role
+# from collections import defaultdict
+# from pathlib import Path
+# from streamlit.source_util import get_pages
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
     page_title="Meeting Management",
-    page_icon=":calendar:",  # This is an emoji shortcode. Could be a URL too.
+    page_icon=":calendar:",
     layout="wide"
 )
 

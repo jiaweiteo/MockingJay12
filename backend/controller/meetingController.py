@@ -1,7 +1,7 @@
-from collections import defaultdict
 from pathlib import Path
 import sqlite3
-import pandas as pd
+# from collections import defaultdict
+# import pandas as pd
 
 def connect_meeting_db():
     """Connects to the sqlite database."""
