@@ -43,12 +43,12 @@ def initialize_meeting_data(conn):
         INSERT INTO meeting
             (meetingTitle, meetingDate, description, startTime, endTime, totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn)
         VALUES
-            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00:00', '17:30:00', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082),
-            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00:00', '17:30:00', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082),
-            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00:00', '17:30:00', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082),
-            ('04/25', '2025-02-23', 'Almost Full', '15:00:00', '17:30:00', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082),
-            ('05/25', '2025-03-06', 'Test', '15:00:00', '17:30:00', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082),
-            ('06/25', '2025-03-20', 'No Slots Left', '15:00:00', '17:30:00', 150, 100, 50, "Simei", 'Jia Wei', 1733825082)
+            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00', '17:30', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082),
+            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00', '17:30', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082),
+            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00', '17:30', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082),
+            ('04/25', '2025-02-23', 'Almost Full', '15:00', '17:30', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082),
+            ('05/25', '2025-03-06', 'Test', '15:00', '17:30', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082),
+            ('06/25', '2025-03-20', 'No Slots Left', '15:00', '17:30', 150, 100, 50, "Simei", 'Jia Wei', 1733825082)
         """
     )
     conn.commit()
