@@ -53,6 +53,7 @@ def confirm_delete_meeting(meeting_id):
     delete_meeting(meeting_id)
     switch_page("home")
 
+
 def confirm_delete_item(item_id, title):
     delete_item(item_id)
     st.success(f"Item '{title}' deleted successfully.")
@@ -103,7 +104,7 @@ def display_meeting():
         st.title("No Meeting found. Invalid Meeting ID: " + meeting_id)
     else:
         # Convert UNIX timestamp to human-readable format
-        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H:%M")
+        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H%Mh")
 
         # Page title
         st.title(meeting_details["meetingTitle"] + " DM Meeting")

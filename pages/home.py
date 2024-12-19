@@ -72,7 +72,7 @@ def render_meeting_card(meeting):
                 <h4 style="margin: 0; color: #333;">{meeting['meetingTitle']} DM</h4>
                 <h6 style="color: #666;">{meeting['description']}</h6>
                 <p style="color: #666;">
-                    Time: {formatted_date}, {meeting['startTime']} - {meeting['endTime']}
+                    Time: {formatted_date}, {meeting['startTime'].replace(":", "")}-{meeting['endTime'].replace(":", "")}h
                     <br>
                     Location: {meeting['location']}
                 </p>
@@ -85,7 +85,7 @@ def render_meeting_card(meeting):
 # Streamlit app
 st.title(":calendar: MockingJay")
 
-leftCol, rightCol = st.columns([3, 2])
+leftCol, rightCol = st.columns([4, 3])
 
 with leftCol:
     with st.container(border=True):
@@ -129,7 +129,7 @@ with leftCol:
             handle_event_click(state)
 
 with rightCol:
-    innerLeftCol, innerRightCol = st.columns([3, 1])
+    innerLeftCol, innerRightCol = st.columns([3, 2])
     with innerLeftCol:
         st.subheader("Meeting Forecast")
     with innerRightCol:
