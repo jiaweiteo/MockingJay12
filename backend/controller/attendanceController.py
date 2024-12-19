@@ -156,6 +156,24 @@ def load_secretariat_data(personnelConn):
     conn.close()
 
 
+def fetch_secretariat_data():
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+    query = "SELECT perNum as PerNum, name as Name, designation as Designation FROM secretariat;"
+    rows = attendance_cursor.fetchall()
+
+    try:
+        attendance_cursor.execute(query)
+        rows = attendance_cursor.fetchall()
+        data = [dict(row) for row in rows]
+    except:
+        return None
+    
+    attendance_conn.close()
+    return data
+
+
 def initialize_coremembers_data(conn, personnel_conn):
     """Initializes the coremembers table with some data."""
     coremembers_perNum_list = [32788, 81316, 95169, 28811, 93492, 41870, 59598, 48246, 87829, 45387, 14902, 10887, 25616, 30749, 8135, 18642, 71433, 93449, 10584, 32893, 69129, 81044, 48928]
@@ -203,6 +221,24 @@ def load_coremembers_data(personnelConn):
     conn.close()
 
 
+def fetch_coremembers_data():
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+    query = "SELECT perNum as PerNum, name as Name, designation as Designation, role as Role FROM coremembers ORDER BY role;"
+    rows = attendance_cursor.fetchall()
+
+    try:
+        attendance_cursor.execute(query)
+        rows = attendance_cursor.fetchall()
+        data = [dict(row) for row in rows]
+    except:
+        return None
+    
+    attendance_conn.close()
+    return data
+
+
 
 def add_or_update_table_member(table, perNum):
     # Add member into secretariat or coremembers table
@@ -236,8 +272,8 @@ def add_or_update_table_member(table, perNum):
         for row in data:
             perNum, name, designation = row
     else:
-        print(f'No personnel with perNum {perNum}')
-        exit()
+        st.warning(f'No personnel with perNum {perNum}')
+        #exit()
 
     insert_query = f"INSERT OR REPLACE INTO {table} (perNum, name, designation) values (?,?,?)"
     attendance_cursor.execute(insert_query, (perNum, name, designation))
@@ -269,6 +305,60 @@ def remove_table_member(table, perNum):
     attendance_cursor.execute(delete_query, (perNum,))
     result = attendance_cursor.rowcount
     print(f"{result} row(s) deleted from {table}")
+    attendance_conn.commit()
+    attendance_conn.close()
+
+
+def update_coremember_secretariat_data(df, changes, table):
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+
+    if changes["edited_rows"]:
+        if table == 'secretariat':
+            deltas = st.session_state.secretariat["edited_rows"]
+        elif table == 'coremembers':
+            deltas = st.session_state.coremembers["edited_rows"]
+
+        rows = []
+        for i, delta in deltas.items():
+            row_dict = df.iloc[i].to_dict()
+            row_dict.update(delta)
+            rows.append(row_dict)
+
+        if table == 'coremembers':
+            attendance_cursor.executemany(
+                f"""
+                UPDATE {table}
+                SET
+                    perNum = :PerNum,
+                    role = :Role
+                WHERE perNum = :PerNum 
+                """,
+                rows,
+                )
+
+    if changes["deleted_rows"]:
+        perNums = []
+        for i in changes["deleted_rows"]:
+            row_dict = df.iloc[i].to_dict()
+            perNums.append(row_dict["PerNum"])
+
+        for perNum in perNums:
+            remove_table_member(f'{table}',perNum)
+
+    
+    if changes["added_rows"]:
+        perNums = []
+        
+        for i in changes["added_rows"]:
+            #row_dict = i.to_dict()
+            row_dict = i
+            perNums.append(row_dict["PerNum"])
+
+        for perNum in perNums:
+            add_or_update_table_member(f'{table}',perNum)
+
     attendance_conn.commit()
     attendance_conn.close()
 
@@ -335,8 +425,8 @@ def add_or_update_item_owners(meeting_id, item_id, perNum):
         for row in data:
             perNum, name, designation = row
     else:
-        print(f'No personnel with perNum {perNum}')
-        exit()
+        st.warning(f'No personnel with perNum {perNum}')
+#        exit()
 
     insert_query = f"INSERT OR REPLACE INTO item_owners (perNum, name, designation,meeting_id, item_id) values (?,?,?,?,?)"
     attendance_cursor.execute(insert_query, (perNum, name, designation,meeting_id, item_id))
@@ -436,8 +526,8 @@ def add_additional_attendees(meeting_id, item_id, perNum):
         for row in data:
             perNum, name, designation = row
     else:
-        print(f'No personnel with perNum {perNum}')
-        exit()
+        st.warning(f'No personnel with perNum {perNum}')
+        #exit()
 
     insert_query = f"INSERT OR REPLACE INTO additional_attendees (perNum, name, designation,meeting_id, item_id) values (?,?,?,?,?)"
     attendance_cursor.execute(insert_query, (perNum, name, designation,meeting_id, item_id))
