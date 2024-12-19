@@ -516,7 +516,7 @@ def default_nonselect_attendance_for_meetingid(meeting_id, item_id_list):
         coremembers_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id},'Y', role, '' from coremembers;"
         attendance_cursor.execute(coremembers_query)
         secretariat_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, {meeting_id}, {item_id},'Y', 'Secretariat', '' from secretariat;"
-        attendance_cursor.execute(coremembers_query)
+        attendance_cursor.execute(secretariat_query)
     item_owner_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, 'Y', 'ItemOwner', '' from item_owners where meeting_id == ?;"
     attendance_cursor.execute(item_owner_query, (meeting_id,))
     additional_attendees_query = f"INSERT INTO nonselect_attendance SELECT perNum, name, designation, meeting_id, item_id, 'Y', 'AdditionalAttendee', '' from additional_attendees where meeting_id == ?;"
@@ -529,7 +529,7 @@ def fetch_nonselect_attendance_by_meetingid(meeting_id):
     attendance_conn, attendance_db_was_just_created = connect_attendance_db()
     conn.row_factory = sqlite3.rowcount
     attendance_cursor = attendance_conn.cursor()
-    query = "SELECT DISTINCT perNum, name, designation, dept, section, jobGrade, meeting_id, GROUP_CONCAT(item_number), GROUP_CONCAT(attendance_flag),GROUP_CONCAT(remarks) FROM nonselect_attendance WHERE meeting_id = ? GROUP BY perNum"
+    query = "SELECT DISTINCT perNum, name, designation, meeting_id, GROUP_CONCAT(item_id), GROUP_CONCAT(attendance_flag), role, GROUP_CONCAT(remarks) FROM nonselect_attendance WHERE meeting_id = ? GROUP BY perNum"
     rows = attendance_cursor.fetchall()
 
     try:
