@@ -1,10 +1,12 @@
 import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, fetch_upcoming_meeting, delete_meeting
 from backend.controller.itemController import get_sorted_items_by_id, delete_item, get_total_duration
+from backend.controller.attendanceController import fetch_nonselect_attendance_by_meetingid, update_nonselect_attendance_by_meetingid
 from datetime import datetime
 from utils.dateUtils import *
 from utils.constants import Role
 from streamlit_extras.switch_page_button import switch_page 
+import pandas as pd
 
 def get_status_color(status):
     """
@@ -156,5 +158,34 @@ def display_meeting():
             print(st.session_state.delete_item)
             item = st.session_state.delete_item
             handle_delete_item(item["id"], item['title'])
+
+
+        with st.container():
+            st.subheader("Attendance", divider="violet")
+            data = fetch_nonselect_attendance_by_meetingid(meeting_id)
+            df = pd.DataFrame(
+                data,
+                columns=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Attendance", "Role", "Remarks"]
+                )
+
+            edited_df = st.data_editor(
+                df, 
+                disabled=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Role"], 
+                num_rows = "dynamic",
+                column_config={
+                    "PerNum": st.column_config.NumberColumn(format="%d"),
+                    "Attendance": st.column_config.CheckboxColumn(default=True)
+                },
+                key="nonselect_attendance"
+                )
+            has_uncommitted_changes = any(len(v) for v in st.session_state.nonselect_attendance.values())
+            st.button(
+                "Commit changes",
+                type="primary",
+                disabled=not has_uncommitted_changes,
+                # Update data in database
+                on_click=update_nonselect_attendance_by_meetingid,
+                args=(df, st.session_state.nonselect_attendance,meeting_id),
+            )
 
 display_meeting()
