@@ -5,7 +5,7 @@ from streamlit_calendar import calendar
 from utils.dateUtils import *
 from utils.constants import Role
 
-from backend.controller.attendanceController import fetch_secretariat_data, fetch_coremembers_data, update_coremember_secretariat_data
+from backend.controller.attendanceController import fetch_secretariat_data, fetch_coremembers_data, update_secretariat_data, update_coremembers_data
 calendar_options = {
     "editable": "true",
     "selectable": "true",    
@@ -142,7 +142,9 @@ with st.container():
             df, 
             disabled=["Name", "Designation"],
             column_config={
-                "PerNum": st.column_config.NumberColumn(format="%d")
+                "PerNum": st.column_config.NumberColumn(format="%d"),
+                "Role": st.column_config.SelectboxColumn("Role", options=["HOD","Permanent"],required=True)
+
             },
             num_rows = "dynamic",
             key="coremembers"
@@ -153,8 +155,8 @@ with st.container():
             "Commit changes",
             disabled=not has_uncommitted_changes,
             # Update data in database
-            on_click=update_coremember_secretariat_data,
-            args=(df, st.session_state.coremembers,'coremembers'),
+            on_click=update_coremembers_data,
+            args=(df, st.session_state.coremembers),
             key='coremembers_commit'
             )
 
@@ -188,8 +190,8 @@ with st.container():
             "Commit changes",
             disabled=not has_uncommitted_changes,
             # Update data in database
-            on_click=update_coremember_secretariat_data,
-            args=(df, st.session_state.secretariat,'secretariat'),
+            on_click=update_secretariat_data,
+            args=(df, st.session_state.secretariat),
             key='secretariat_commit'
             )
 
