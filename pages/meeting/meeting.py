@@ -55,6 +55,7 @@ def confirm_delete_meeting(meeting_id):
     delete_meeting(meeting_id)
     switch_page("home")
 
+
 def confirm_delete_item(item_id, title):
     delete_item(item_id)
     st.success(f"Item '{title}' deleted successfully.")
@@ -105,7 +106,7 @@ def display_meeting():
         st.title("No Meeting found. Invalid Meeting ID: " + meeting_id)
     else:
         # Convert UNIX timestamp to human-readable format
-        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H:%M:%S")
+        created_on_date = datetime.fromtimestamp(meeting_details["createdOn"]).strftime("%Y-%m-%d %H%Mh")
 
         # Page title
         st.title(meeting_details["meetingTitle"] + " DM Meeting")
@@ -120,9 +121,9 @@ def display_meeting():
             # Left column content
             with col1:
                 st.subheader("Details", divider="green")
-                st.write(f"**Date:** {format_date(meeting_details['meetingDate'])}")
-                st.write(f"**Time:** {meeting_details['startTime']} - {meeting_details['endTime']}")
-                st.write(f"**Location:** {meeting_details['location']}")
+                st.write(f"**Date:**       {format_date(meeting_details['meetingDate'])}")
+                st.write(f"**Time:**       {meeting_details['startTime']} - {meeting_details['endTime']}")
+                st.write(f"**Location:**:  {meeting_details['location']}")
                 st.write(f"**Created By:** {meeting_details['createdBy']} (Created on {created_on_date})")
                 st.markdown('</div>', unsafe_allow_html=True)
 

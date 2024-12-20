@@ -1,7 +1,8 @@
 from enum import Enum
 
 Role = Enum('Role', 
-            [('GENERAL', None), 
+            [('GENERAL', None),
+             ('PERSONAL_ASSISTANT', "Personal Assistant"),
              ('ITEM_OWNER', "ItemOwner"), 
              ('SECRETARIAT', "Secretariat")])
 

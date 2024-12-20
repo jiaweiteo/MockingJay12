@@ -8,7 +8,12 @@ from utils.constants import Role
 from backend.controller.attendanceController import fetch_secretariat_data, fetch_coremembers_data, update_secretariat_data, update_coremembers_data
 calendar_options = {
     "editable": "true",
-    "selectable": "true",    
+    "selectable": "true",
+    "businessHours": {
+        "daysOfWeek": [1, 2, 3, 4, 5],
+        "startTime": "09:00",
+        "endTime": "18:00"
+    }
 }
 
 custom_css="""
@@ -19,14 +24,21 @@ custom_css="""
     .fc-event-past {
         opacity: 0.8;
     }
+
     .fc-event-time {
         font-style: italic;
     }
+
     .fc-event-title {
         font-weight: 700;
     }
+    
     .fc-toolbar-title {
         font-size: 2rem;
+    }
+
+    th.fc-day-sun, th.fc-day-sat, td.fc-day-sun, td.fc-day-sat {
+        display: none !important;
     }
 """
 
@@ -61,7 +73,7 @@ def render_meeting_card(meeting):
                 <h4 style="margin: 0; color: #333;">{meeting['meetingTitle']} DM</h4>
                 <h6 style="color: #666;">{meeting['description']}</h6>
                 <p style="color: #666;">
-                    Time: {formatted_date}, {meeting['startTime']} - {meeting['endTime']}
+                    Time: {formatted_date}, {meeting['startTime'].replace(":", "")}-{meeting['endTime'].replace(":", "")}h
                     <br>
                     Location: {meeting['location']}
                 </p>
@@ -74,25 +86,24 @@ def render_meeting_card(meeting):
 # Streamlit app
 st.title(":calendar: MockingJay")
 
-leftCol, rightCol = st.columns(2)
+leftCol, rightCol = st.columns([4, 3])
 
 with leftCol:
-    """
-    **This is a single-stop platform for managing DM processes and progress**
+    with st.container(border=True):
+        """
+        ### Department Meeting (DM)
+        Purpose:
 
-    ### Department Meeting (DM)
-    Purpose:
+        1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
-    1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        2.  Quisque eu mattis sapien. Cras dapibus ac leo nec ultricies.
 
-    2.  Quisque eu mattis sapien. Cras dapibus ac leo nec ultricies.
+        (Note: Cras egestas vulputate massa, sed tristique metus malesuada eget.).
 
-    (Note: Cras egestas vulputate massa, sed tristique metus malesuada eget.).
+        **Frequency: Cras id laoreet mi**
 
-    **Frequency: Cras id laoreet mi**
-
-    **Email: test@gmail.com**
-    """
+        **Email: test@gmail.com**
+        """
 
     # Fetch card data from the database
     meetings = load_meeting_data()
@@ -108,19 +119,20 @@ with leftCol:
             } 
             for m in meetings]
 
-    state = calendar(
-        events=events,
-        options=calendar_options,
-        custom_css=custom_css
-        )
+    with st.container(border=True):
+        state = calendar(
+            events=events,
+            options=calendar_options,
+            custom_css=custom_css
+            )
 
-    if state.get("callback") is not None and state.get("callback") == "eventClick":
-        handle_event_click(state)
+        if state.get("callback") is not None and state.get("callback") == "eventClick":
+            handle_event_click(state)
 
 with rightCol:
-    innerLeftCol, innerRightCol = st.columns([3,1])
+    innerLeftCol, innerRightCol = st.columns([3, 2])
     with innerLeftCol:
-        st.subheader("Upcoming DM Meetings")
+        st.subheader("Meeting Forecast")
     with innerRightCol:
         if st.session_state.role == Role.SECRETARIAT.value:
             st.link_button(label="New Meeting", icon="➕", url="/meeting-form")

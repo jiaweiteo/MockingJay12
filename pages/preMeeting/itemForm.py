@@ -1,16 +1,28 @@
+import numpy as np
+import pandas as pd
 import streamlit as st
-from urllib.parse import parse_qs
 from backend.controller.meetingController import fetch_meeting_by_id, load_meeting_data
 from backend.controller.itemController import create_item, get_item_by_id, update_item
-from utils.dateUtils import format_date
-import pandas as pd
-from utils.constants import Item_Status
 from datetime import datetime
-import numpy as np
-from streamlit_extras.switch_page_button import switch_page 
+from urllib.parse import parse_qs
+from streamlit_extras.switch_page_button import switch_page
+from streamlit_extras import stylable_container
+from utils.dateUtils import format_date
+from utils.constants import Item_Status
 
-purposeLookup = ["Tier 1 (For Approval)", "Tier 1 (For Discussion)", "Tier 2 (For Information)"]
+
+purposeLookup = [":blue[Tier 1 (For Approval)]", ":blue[Tier 1 (For Discussion)]", ":orange[Tier 2 (For Information)]"]
 selectLookup = ["Non-Select", "Select"]
+
+
+st.markdown("""
+<style>
+:has(label input[tabindex="0"][type="radio"][value="2"]) div[data-testid="stColumn"] div.st-key-duration {
+    display: none;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 def get_meeting_id(meetings_df, formatted_value):
     """
@@ -28,12 +40,15 @@ def get_meeting_id(meetings_df, formatted_value):
         return int(matching_row["id"].iloc[0])
     return None
 
+
 def get_meeting_date_title_index(meetings_df, meeting_id):
     result = meetings_df[meetings_df["id"] == np.int64(meeting_id)].index.tolist()
     return result[0] if result else 0
 
+
 def get_select_string_value(select_flag):
     return "Select" if select_flag == 1 else "Non-Select"
+
 
 def get_item_table_dict(meeting_id, form_data_dict):
     # Parse form inputs into a dictionary
@@ -49,6 +64,7 @@ def get_item_table_dict(meeting_id, form_data_dict):
         "additionalAttendees": ", ".join(form_data_dict.get("additional_attendees", [])),
     }
     return item_data
+
 
 # Function to parse form inputs and create the item
 def handle_form_submission(meeting_id, form_data_dict):
@@ -66,6 +82,7 @@ def handle_form_submission(meeting_id, form_data_dict):
     switch_page("home")
     return created_item
 
+
 # Function to parse form inputs and create the item
 def handle_form_update(meeting_id, item_id, form_data_dict):
     item_data = get_item_table_dict(meeting_id, form_data_dict)
@@ -75,6 +92,7 @@ def handle_form_update(meeting_id, item_id, form_data_dict):
     st.write(item_data)
     switch_page("home")
     return updated_item
+
 
 def register_item_page():
     form_data_dict = item_details = {}
@@ -99,57 +117,80 @@ def register_item_page():
     else:
         st.title("Edit Item for DM")
 
-    # Meeting Item Form
-    with st.form("register_item_form"):
-        # Input fields
-        if item_id is None:
-            meeting_date_df = st.selectbox(    
-                "Date of Meeting",
-                options=meetings_df,
+    actual, _ = st.columns([3, 2])
+    with actual:
+        with st.form("register_item_form"):
+            if item_id is None:
+                meeting_date_df = st.selectbox(    
+                    "Date of Meeting",
+                    options=meetings_df,
+                    index=None
+                )
+                meeting_id = get_meeting_id(meetings_df, meeting_date_df)
+            else:
+                meeting_date_df = st.selectbox(
+                    "Date of Meeting",
+                    options=meetings_df,
+                    index=get_meeting_date_title_index(meetings_df, meeting_id)
+                )
+
+            form_data_dict["item_title"] = st.text_input(
+                "Item Title",
+                placeholder="Enter the title of the item",
+                value=item_details.get("title", "")
             )
-            meeting_id = get_meeting_id(meetings_df, meeting_date_df)
-        else:
-            meeting_date_df = st.selectbox(
-                "Date of Meeting",
-                options=meetings_df,
-                index=get_meeting_date_title_index(meetings_df, meeting_id)
+            
+            form_data_dict["item_description"] = st.text_area(
+                "Item Description",
+                placeholder="Enter the item description",
+                value=item_details.get("description", "")
             )
 
-        form_data_dict["item_title"] = st.text_input("Item Title", placeholder="Enter the title of the item", value=item_details.get("title", ""))
-        form_data_dict["item_description"] = st.text_area("Item Description", placeholder="Enter the item description", value=item_details.get("description", ""))
+            col_purpose, col_duration = st.columns([3, 2], border=True)
+
+            with col_purpose:
+                purpose = st.radio(
+                    "Item Purpose",
+                    purposeLookup,
+                    index=None,
+                    key="purpose"
+                )
+                form_data_dict["item_purpose"] = purpose
+            
+            with col_duration:
+                form_data_dict["duration"] = st.number_input(
+                        "Duration (minutes)",
+                        min_value=5,
+                        max_value=30,
+                        step=5,
+                        value=item_details.get("duration", 15),
+                        key="duration"
+                    )
+            
+            col_owner, col_select = st.columns([3, 2], border=True)
+            
+            # is_tier_1 = False
+
+            with col_owner:
+                label = 'Presenter'
+                placeholder = "Enter the presenter's name"               
+                form_data_dict["item_owner"] = st.text_input(label, placeholder=placeholder, value=item_details.get("itemOwner", ""))
+                        
+            with col_select:
+                form_data_dict["select_flag"] = st.checkbox("Select?")
         
-        form_data_dict["item_purpose"] = st.selectbox(
-            "Item Purpose",
-            options=purposeLookup,
-            index=purposeLookup.index(item_details["purpose"]) if item_details.get("purpose") is not None else 0
-        )
-        
-        form_data_dict["select_flag"] = st.selectbox(
-            "Select or Non-Select",
-            options=selectLookup,
-            index=selectLookup.index(get_select_string_value(item_details["selectFlag"])) if item_details.get("selectFlag") is not None else 0
-        )
-        
-        form_data_dict["duration"] = st.number_input("Duration (minutes)", min_value=5, max_value=30, step=5, value=item_details.get("duration", 15))
-        form_data_dict["item_owner"] = st.text_input("Item Owner", placeholder="Enter the item owner's name", value=item_details.get("itemOwner", ""))
-        
-        print(item_details)
-        # Dynamic input for additional attendees
-        st.subheader("Additional Attendees")
-        form_data_dict["additional_attendees"] = st.multiselect(
-            "Add attendees",
-            options=["Attendee 1", "Attendee 2", "Attendee 3", "Attendee 4"],
-            placeholder="Type or select attendee names",
-            default=item_details["additionalAttendees"].split(", ") if item_details.get("additionalAttendees") is not None else None
-        )
-        
-        # Submit button
-        _, button_col1, = st.columns([15, 1])  # Equal width columns for buttons
-        with button_col1:
+            form_data_dict["additional_attendees"] = st.multiselect(
+                "Add attendees",
+                options=["Attendee 1", "Attendee 2", "Attendee 3", "Attendee 4"],
+                placeholder="Type or select attendee names",
+                default=item_details["additionalAttendees"].split(", ") if item_details.get("additionalAttendees") is not None else None,
+                key="attendees"
+            )
+            
             if item_id is None:
-                register = st.form_submit_button("Register Item")
+                register = st.form_submit_button("Register Item", type="primary", use_container_width=True)
             else:
-                update = st.form_submit_button("Update Item")
+                update = st.form_submit_button("Update Item", type="primary", use_container_width=True)
 
     # Process form submission
     if register:
@@ -163,6 +204,5 @@ def register_item_page():
         else:
             st.error("Invalid Item ID or Meeting ID: " + item_id + " " + meeting_id)
 
-        
 
 register_item_page()

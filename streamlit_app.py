@@ -1,15 +1,17 @@
-from collections import defaultdict
-from pathlib import Path
-from utils.constants import Role
 import streamlit as st
-from streamlit.source_util import get_pages
+from utils.constants import Role
+# from collections import defaultdict
+# from pathlib import Path
+# from streamlit.source_util import get_pages
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
     page_title="Meeting Management",
-    page_icon=":calendar:",  # This is an emoji shortcode. Could be a URL too.
+    page_icon=":calendar:",
     layout="wide"
 )
+
+st.logo('static/logo.jpg')
 
 css = '''
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Source+Code+Pro:wght@300;400;600&display=swap');
@@ -47,7 +49,10 @@ dependencies_page = st.Page('pages/dependencies.py', title='Dependencies')
 database_page = st.Page('pages/database.py', title='Database')
 settings_page = st.Page('pages/settings.py', title='Settings', icon='⚙️')
 
+attendance_page = st.Page('pages/attendance.py', title='Update Attendance', icon='🈁')
+
 general_pages = [home_page, meeting_page, item_form_page, settings_page]
+assistant_pages = [home_page, meeting_page, attendance_page, item_form_page, settings_page]
 secretariat_pages = {
   'Home': [
       home_page,
@@ -70,6 +75,8 @@ secretariat_pages = {
 
 if (role == Role.SECRETARIAT.value):
     nav = st.navigation(secretariat_pages)
+elif (role == Role.PERSONAL_ASSISTANT.value):
+    nav = st.navigation(assistant_pages)
 else:
     nav = st.navigation(general_pages)
 nav.run()
