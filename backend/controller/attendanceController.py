@@ -239,9 +239,8 @@ def fetch_coremembers_data():
     return data
 
 
-
-def add_or_update_table_member(table, perNum):
-    # Add member into secretariat or coremembers table
+def add_or_update_secretariat_table(perNum):
+    # Add member into secretariat table
     if isinstance(perNum, int):
         perNum = perNum
     try:
@@ -250,18 +249,16 @@ def add_or_update_table_member(table, perNum):
         print('perNum needs to be integer!')
         exit()
     
-    table = str(table)
-
     attendance_conn, attendance_db_was_just_created = connect_attendance_db()
     personnel_conn, personnel_db_was_just_created = connect_personnel_db()
 
     attendance_cursor = attendance_conn.cursor()
     personnel_cursor = personnel_conn.cursor()
 
-    attendance_cursor.execute(f"PRAGMA table_info({table})")
+    attendance_cursor.execute(f"PRAGMA table_info(secretariat)")
     table_checker = attendance_cursor.fetchall()
     if len(table_checker) == 0:
-        print(f'Table: {table} not found in database!')
+        print(f'Table: secretariat not found in database!')
         exit()
 
     personnel_select_query = "SELECT perNum, name, designation FROM personnel WHERE perNum == ?"
@@ -275,13 +272,128 @@ def add_or_update_table_member(table, perNum):
         st.warning(f'No personnel with perNum {perNum}')
         #exit()
 
-    insert_query = f"INSERT OR REPLACE INTO {table} (perNum, name, designation) values (?,?,?)"
+    insert_query = f"INSERT OR REPLACE INTO secretariat (perNum, name, designation) values (?,?,?)"
     attendance_cursor.execute(insert_query, (perNum, name, designation))
+    
     result = attendance_cursor.rowcount
-    print(f"{result} row(s) inserted into {table}")   
+    print(f"{result} row(s) inserted into secretariat")   
     attendance_conn.commit()
     attendance_conn.close()
     personnel_conn.close()
+
+
+def update_secretariat_data(df, changes):
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+
+    if changes["deleted_rows"]:
+        perNums = []
+        for i in changes["deleted_rows"]:
+            row_dict = df.iloc[i].to_dict()
+            perNums.append(row_dict["PerNum"])
+
+        for perNum in perNums:
+            remove_table_member("secretariat",perNum)
+    
+    if changes["added_rows"]:
+        perNums = []
+        
+        for i in changes["added_rows"]:
+            perNum =  i["PerNum"]
+            add_or_update_secretariat_table(perNum)
+
+    attendance_conn.commit()
+    attendance_conn.close()
+
+
+
+def add_or_update_coremembers_table(perNum, role):
+    # Add member into coremembers table
+    if isinstance(perNum, int):
+        perNum = perNum
+    try:
+        perNum = int(perNum)    
+    except ValueError:    
+        print('perNum needs to be integer!')
+        exit()
+    
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    personnel_conn, personnel_db_was_just_created = connect_personnel_db()
+
+    attendance_cursor = attendance_conn.cursor()
+    personnel_cursor = personnel_conn.cursor()
+
+    attendance_cursor.execute(f"PRAGMA table_info(coremembers)")
+    table_checker = attendance_cursor.fetchall()
+    if len(table_checker) == 0:
+        print(f'Table: coremembers not found in database!')
+        exit()
+
+    personnel_select_query = "SELECT perNum, name, designation FROM personnel WHERE perNum == ?"
+    personnel_cursor.execute(personnel_select_query,(perNum,))
+    data = personnel_cursor.fetchall()
+
+    if len(data)>0:
+        for row in data:
+            perNum, name, designation = row
+    else:
+        st.warning(f'No personnel with perNum {perNum}')
+        #exit()
+
+    insert_query = f"INSERT OR REPLACE INTO coremembers (perNum, name, designation, role) values (?,?,?,?)"
+    attendance_cursor.execute(insert_query, (perNum, name, designation,role))
+    result = attendance_cursor.rowcount
+    print(f"{result} row(s) inserted into coremembers")   
+    attendance_conn.commit()
+    attendance_conn.close()
+    personnel_conn.close()
+
+
+def update_coremembers_data(df, changes):
+    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
+    attendance_conn.row_factory = sqlite3.Row
+    attendance_cursor = attendance_conn.cursor()
+
+
+    if changes["edited_rows"]:
+        deltas = st.session_state.coremembers["edited_rows"]
+        rows = []
+        for i, delta in deltas.items():
+            row_dict = df.iloc[i].to_dict()
+            row_dict.update(delta)
+            rows.append(row_dict)
+
+        attendance_cursor.executemany(
+            f"""
+            UPDATE coremembers
+            SET
+                perNum = :PerNum,
+                role = :Role
+            WHERE perNum = :PerNum 
+            """,
+            rows,
+            )
+
+    if changes["deleted_rows"]:
+        perNums = []
+        for i in changes["deleted_rows"]:
+            row_dict = df.iloc[i].to_dict()
+            perNums.append(row_dict["PerNum"])
+
+        for perNum in perNums:
+            remove_table_member("coremembers",perNum)
+    
+    if changes["added_rows"]:
+        perNums = []
+        
+        for i in changes["added_rows"]:
+            perNum =  i["PerNum"]
+            role = i["Role"]
+            add_or_update_coremembers_table(perNum,role)
+
+    attendance_conn.commit()
+    attendance_conn.close()
 
 
 def remove_table_member(table, perNum):
@@ -305,60 +417,6 @@ def remove_table_member(table, perNum):
     attendance_cursor.execute(delete_query, (perNum,))
     result = attendance_cursor.rowcount
     print(f"{result} row(s) deleted from {table}")
-    attendance_conn.commit()
-    attendance_conn.close()
-
-
-def update_coremember_secretariat_data(df, changes, table):
-    attendance_conn, attendance_db_was_just_created = connect_attendance_db()
-    attendance_conn.row_factory = sqlite3.Row
-    attendance_cursor = attendance_conn.cursor()
-
-    if changes["edited_rows"]:
-        if table == 'secretariat':
-            deltas = st.session_state.secretariat["edited_rows"]
-        elif table == 'coremembers':
-            deltas = st.session_state.coremembers["edited_rows"]
-
-        rows = []
-        for i, delta in deltas.items():
-            row_dict = df.iloc[i].to_dict()
-            row_dict.update(delta)
-            rows.append(row_dict)
-
-        if table == 'coremembers':
-            attendance_cursor.executemany(
-                f"""
-                UPDATE {table}
-                SET
-                    perNum = :PerNum,
-                    role = :Role
-                WHERE perNum = :PerNum 
-                """,
-                rows,
-                )
-
-    if changes["deleted_rows"]:
-        perNums = []
-        for i in changes["deleted_rows"]:
-            row_dict = df.iloc[i].to_dict()
-            perNums.append(row_dict["PerNum"])
-
-        for perNum in perNums:
-            remove_table_member(f'{table}',perNum)
-
-    
-    if changes["added_rows"]:
-        perNums = []
-        
-        for i in changes["added_rows"]:
-            #row_dict = i.to_dict()
-            row_dict = i
-            perNums.append(row_dict["PerNum"])
-
-        for perNum in perNums:
-            add_or_update_table_member(f'{table}',perNum)
-
     attendance_conn.commit()
     attendance_conn.close()
 
