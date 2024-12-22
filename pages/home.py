@@ -4,6 +4,7 @@ from backend.controller.meetingController import *
 from streamlit_calendar import calendar
 from utils.dateUtils import *
 from utils.constants import Role
+import pandas as pd
 
 from backend.controller.attendanceController import fetch_secretariat_data, fetch_coremembers_data, update_secretariat_data, update_coremembers_data
 calendar_options = {
@@ -142,73 +143,74 @@ with rightCol:
 
 
 with st.container():
-    st.subheader("Main Attendees", divider="green")
+    main_attendees_col, secretariat_col = st.columns(2)
+    with main_attendees_col:
+        st.subheader("Main Attendees", divider="green")
 
-    data = fetch_coremembers_data()
-    df = pd.DataFrame(
-        data,
-        columns=["PerNum", "Name", "Designation", "Role"]
-        )
-    if st.session_state.role == Role.SECRETARIAT.value:
-        edited_df = st.data_editor(
-            df, 
-            disabled=["Name", "Designation"],
-            column_config={
-                "PerNum": st.column_config.NumberColumn(format="%d"),
-                "Role": st.column_config.SelectboxColumn("Role", options=["HOD","Permanent"],required=True)
-
-            },
-            num_rows = "dynamic",
-            key="coremembers"
+        data = fetch_coremembers_data()
+        df = pd.DataFrame(
+            data,
+            columns=["PerNum", "Name", "Designation", "Role"]
             )
-        has_uncommitted_changes = any(len(v) for v in st.session_state.coremembers.values())
-        
-        st.button(
-            "Commit changes",
-            disabled=not has_uncommitted_changes,
-            # Update data in database
-            on_click=update_coremembers_data,
-            args=(df, st.session_state.coremembers),
-            key='coremembers_commit'
-            )
+        if st.session_state.role == Role.SECRETARIAT.value:
+            edited_df = st.data_editor(
+                df, 
+                disabled=["Name", "Designation"],
+                column_config={
+                    "PerNum": st.column_config.NumberColumn(format="%d"),
+                    "Role": st.column_config.SelectboxColumn("Role", options=["HOD","Permanent"],required=True)
 
-    else:
-         edited_df = st.dataframe(
-            df, 
-            key="coremembers"
-            )
+                },
+                num_rows = "dynamic",
+                key="coremembers",
+                use_container_width=True
+                )
+            has_uncommitted_changes = any(len(v) for v in st.session_state.coremembers.values())
+            st.button(
+                "Update Core Members",
+                disabled=not has_uncommitted_changes,
+                # Update data in database
+                on_click=update_coremembers_data,
+                args=(df, st.session_state.coremembers),
+                key='coremembers_commit'
+                )
+        else:
+            edited_df = st.dataframe(
+                df, 
+                key="coremembers"
+                )
+    with secretariat_col:
+        st.subheader("Secretariat Team", divider="blue")
 
-with st.container():
-    st.subheader("Secretariat Team", divider="blue")
-
-    data = fetch_secretariat_data()
-    df = pd.DataFrame(
-        data,
-        columns=["PerNum", "Name", "Designation"]
-        )
-    if st.session_state.role == Role.SECRETARIAT.value:
-        edited_df = st.data_editor(
-            df, 
-            disabled=["Name", "Designation"],
-            column_config={
-                "PerNum": st.column_config.NumberColumn(format="%d")
-            },
-            num_rows = "dynamic",
-            key="secretariat"
+        data = fetch_secretariat_data()
+        df = pd.DataFrame(
+            data,
+            columns=["PerNum", "Name", "Designation"]
             )
-        has_uncommitted_changes = any(len(v) for v in st.session_state.secretariat.values())
-        
-        st.button(
-            "Commit changes",
-            disabled=not has_uncommitted_changes,
-            # Update data in database
-            on_click=update_secretariat_data,
-            args=(df, st.session_state.secretariat),
-            key='secretariat_commit'
-            )
+        if st.session_state.role == Role.SECRETARIAT.value:
+            edited_df = st.data_editor(
+                df, 
+                disabled=["Name", "Designation"],
+                column_config={
+                    "PerNum": st.column_config.NumberColumn(format="%d")
+                },
+                num_rows = "dynamic",
+                key="secretariat",
+                use_container_width=True
+                )
+            has_uncommitted_changes = any(len(v) for v in st.session_state.secretariat.values())
+            
+            st.button(
+                "Update Secretariat Team",
+                disabled=not has_uncommitted_changes,
+                # Update data in database
+                on_click=update_secretariat_data,
+                args=(df, st.session_state.secretariat),
+                key='secretariat_commit'
+                )
 
-    else:
-         edited_df = st.dataframe(
-            df, 
-            key="secretariat"
-            )       
+        else:
+            edited_df = st.dataframe(
+                df, 
+                key="secretariat"
+                )       

@@ -365,7 +365,7 @@ def update_coremembers_data(df, changes):
             rows.append(row_dict)
 
         attendance_cursor.executemany(
-            f"""
+            """
             UPDATE coremembers
             SET
                 perNum = :PerNum,

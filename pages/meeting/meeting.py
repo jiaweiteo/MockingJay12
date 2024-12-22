@@ -181,7 +181,7 @@ def display_meeting():
                 )
             has_uncommitted_changes = any(len(v) for v in st.session_state.nonselect_attendance.values())
             st.button(
-                "Commit changes",
+                "Update Attendance",
                 type="primary",
                 disabled=not has_uncommitted_changes,
                 # Update data in database
