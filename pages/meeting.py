@@ -7,6 +7,7 @@ from utils.dateUtils import *
 from utils.constants import Role
 from streamlit_extras.switch_page_button import switch_page 
 import pandas as pd
+import re
 
 def get_status_color(status):
     """
@@ -20,6 +21,16 @@ def get_status_color(status):
     }
     return status_colors.get(status, "gray")  # Default to gray for unknown statuses
 
+def get_purpose_color_and_value(purpose):
+    pattern = r':(\w+)\[(.*?)\]'
+    match = re.match(pattern, purpose)
+    
+    if match:
+        color = match.group(1)
+        content = match.group(2)
+        return color, content
+    return None, None
+
 def display_items(items):
     if not items:
         st.info("No items found for this meeting.")
@@ -28,6 +39,7 @@ def display_items(items):
     # Display items as cards
     for item in items:
         status_color = get_status_color(item["status"])
+        tier_color, tier_value = get_purpose_color_and_value(item["purpose"])
         with st.container():
             col1, col2 = st.columns([4,1])
             with col1:
@@ -37,7 +49,7 @@ def display_items(items):
                         <h4 style="margin: 0; color: #2c3e50;">{item['title']}</h4>
                         <p style="margin: 4px 0; color: {status_color};"><strong>Status:</strong> {item['status']}</p>
                         <p style="margin: 4px 0;"><strong>Description:</strong> {item['description']}</p>
-                        <p style="margin: 4px 0;"><strong>Purpose:</strong> {item['purpose']}</p>
+                        <p style="margin: 4px 0; color: {tier_color}"><strong>Purpose:</strong> {tier_value}</p>
                         <p style="margin: 4px 0;"><strong>Duration:</strong> {item['duration']} minutes</p>
                         <p style="margin: 4px 0;"><strong>Owner:</strong> {item['itemOwner']}</p>
                         <p style="margin: 4px 0;"><strong>Additional Attendees:</strong> {item['additionalAttendees'] if item['additionalAttendees'] else "-"}</p>

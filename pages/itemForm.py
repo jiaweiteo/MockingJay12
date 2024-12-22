@@ -4,7 +4,6 @@ import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, load_meeting_data
 from backend.controller.itemController import create_item, get_item_by_id, update_item
 from datetime import datetime
-from urllib.parse import parse_qs
 from streamlit_extras.switch_page_button import switch_page
 from streamlit_extras import stylable_container
 from utils.dateUtils import format_date
@@ -59,7 +58,7 @@ def get_item_table_dict(meeting_id, form_data_dict):
         "purpose": form_data_dict.get("item_purpose", ""),
         "tier": 1 if "Tier 1" in form_data_dict.get("item_purpose", "") else 2,
         "selectFlag": 1 if form_data_dict.get("select_flag", "Non-Select") == "Select" else 0,
-        "duration": form_data_dict.get("duration", 0),
+        "duration": 0 if "Tier 2" in form_data_dict.get("item_purpose", "") else form_data_dict.get("duration", 0),
         "itemOwner": form_data_dict.get("item_owner", "").strip(),
         "additionalAttendees": ", ".join(form_data_dict.get("additional_attendees", [])),
     }
@@ -171,8 +170,6 @@ def register_item_page():
                     )
             
             col_owner, col_select = st.columns([3, 2], border=True)
-            
-            # is_tier_1 = False
 
             with col_owner:
                 label = 'Presenter'
