@@ -24,7 +24,6 @@ def displayAgenda(meeting_details):
     print(agenda_items)
     df = pd.DataFrame(
     agenda_items,
-    columns=["id", "meetingId", "itemTitle", "status", "description", "duration", "purpose", "owner", "additionalAttendees"]
     )
 
     # Convert to DataFrame for editing
