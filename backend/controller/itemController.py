@@ -1,7 +1,25 @@
+import streamlit as st
 from collections import defaultdict
 from pathlib import Path
 import sqlite3
 import pandas as pd
+from dataclasses import dataclass
+
+@dataclass
+class MeetingItem:
+    id: int
+    meetingId: int
+    title: str
+    status: str
+    description: str
+    duration: int
+    purpose: str
+    tier: int
+    selectFlag: int
+    itemOwner: str
+    additionalAttendees: str
+    createdBy: str
+    createdOn: int
 
 def connect_item_db():
     """Connects to the sqlite database."""
@@ -120,6 +138,57 @@ def update_item(item_id, updated_data):
 
     conn.close()
     return get_item_by_id(item_id)
+
+def update_agenda_table_data(df, changes):
+    with connect_item_db() as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        if changes["edited_rows"]:
+            deltas = st.session_state.agenda_editor["edited_rows"]
+            rows = []
+            for i, delta in deltas.items():
+                row_dict = df.iloc[i].to_dict()
+                row_dict.update(delta)
+                rows.append(row_dict)
+
+            cursor.executemany(
+                """
+                UPDATE item
+                SET
+                    title = :title,
+                    description = :description,
+                    purpose = :purpose,
+                    tier = :tier,
+                    duration = :duration,
+                    itemOwner = :itemOwner,
+                    additionalAttendees = :additionalAttendees
+                    status = :status
+                WHERE id = :id
+                """,
+                rows,
+                )
+
+        if changes["deleted_rows"]:
+            cursor.executemany(
+                "DELETE FROM item WHERE id = :id",
+                ({"id": int(df.loc[i, "id"])} for i in changes["deleted_rows"]),
+            )
+
+        
+        if changes["added_rows"]:
+            cursor.executemany(
+                """
+                INSERT INTO item
+                     (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn)
+                VALUES
+                    (:meetingId, :title, :description, :purpose, :tier, :selectFlag, :duration, :itemOwner, :additionalAttendees, :status, :createdBy, :createdOn)
+                """,
+                (defaultdict(lambda: None, row) for row in changes["added_rows"]),
+            )
+
+        conn.commit()
+        conn.close()
 
 
 # Helper function to fetch a single item by ID

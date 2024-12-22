@@ -2,6 +2,23 @@ from pathlib import Path
 import sqlite3
 # from collections import defaultdict
 # import pandas as pd
+from dataclasses import dataclass
+
+@dataclass
+class Meeting:
+    id: int
+    meetingTitle: str
+    meetingDate: str
+    description: str
+    startTime: str
+    endTime: str
+    totalDuration: int
+    minutesLeft: int
+    minutesTaken: int
+    location: str
+    createdBy: str
+    createdOn: int
+    status: str
 
 def connect_meeting_db():
     """Connects to the sqlite database."""
@@ -33,7 +50,8 @@ def initialize_meeting_data(conn):
             minutesTaken INTEGER,
             location TEXT,
             createdBy TEXT,
-            createdOn INTEGER
+            createdOn INTEGER,
+            status TEXT
         )
         """
     )
@@ -41,14 +59,14 @@ def initialize_meeting_data(conn):
     cursor.execute(
         """
         INSERT INTO meeting
-            (meetingTitle, meetingDate, description, startTime, endTime, totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn)
+            (meetingTitle, meetingDate, description, startTime, endTime, totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn, status)
         VALUES
-            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00', '17:30', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082),
-            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00', '17:30', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082),
-            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00', '17:30', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082),
-            ('04/25', '2025-02-23', 'Almost Full', '15:00', '17:30', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082),
-            ('05/25', '2025-03-06', 'Test', '15:00', '17:30', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082),
-            ('06/25', '2025-03-20', 'No Slots Left', '15:00', '17:30', 150, 100, 50, "Simei", 'Jia Wei', 1733825082)
+            ('01/25', '2025-01-05', 'Tier 1 & Tier 2 Slots Available', '15:00', '17:30', 150, 30, 120, "Orchard", 'Jia Wei', 1733825082, "Curation"),
+            ('02/25', '2025-01-23', 'Tier 1 Slots Left', '15:00', '17:30', 150, 45, 105, "Yishun", 'Jia Wei', 1733825082, "Curation"),
+            ('03/25', '2025-02-06', 'Tier 2 Slots Left', '15:00', '17:30', 150, 60, 90, "Woodlands", 'Jia Wei', 1733825082, "Curation"),
+            ('04/25', '2025-02-23', 'Almost Full', '15:00', '17:30', 150, 150, 0, "Jurong", 'Jia Wei', 1733825082, "Curation"),
+            ('05/25', '2025-03-06', 'Test', '15:00', '17:30', 150, 0, 150, "Boon Lay", 'Jia Wei', 1733825082, "Curation"),
+            ('06/25', '2025-03-20', 'No Slots Left', '15:00', '17:30', 150, 100, 50, "Simei", 'Jia Wei', 1733825082, "Curation")
         """
     )
     conn.commit()
@@ -136,7 +154,7 @@ def fetch_upcoming_meeting():
 def create_meeting(meeting_details):
     required_keys = [
         "meetingTitle", "meetingDate", "description", "startTime", "endTime",
-        "totalDuration", "minutesLeft", "minutesTaken", "location", "createdBy", "createdOn"
+        "totalDuration", "minutesLeft", "minutesTaken", "location", "createdBy", "createdOn", "status"
     ]
 
     # Validate that all required keys are present
@@ -148,8 +166,8 @@ def create_meeting(meeting_details):
     query = """
     INSERT INTO meeting (
         meetingTitle, meetingDate, description, startTime, endTime,
-        totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        totalDuration, minutesLeft, minutesTaken, location, createdBy, createdOn, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     # Extract values from meeting_details dictionary

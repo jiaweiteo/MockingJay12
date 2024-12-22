@@ -70,7 +70,7 @@ def handle_form_submission(meeting_id, form_data_dict):
     # Call the create_item function
     item_data = get_item_table_dict(meeting_id, form_data_dict)
     system_data = {
-        "status": Item_Status.PENDING.value,  # Default status
+        "status": Item_Status.REGISTERED.value,  # Default status
         "createdBy": "Admin",
         "createdOn": datetime.now().timestamp()
     }
@@ -121,7 +121,6 @@ def register_item_page():
     actual, _ = st.columns([3, 2])
     with actual:
         with st.form("register_item_form"):
-            print(meeting_id)
             if meeting_id is None:
                 meeting_date_df = st.selectbox(    
                     "Date of Meeting",

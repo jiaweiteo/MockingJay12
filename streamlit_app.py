@@ -41,7 +41,7 @@ home_page = st.Page('pages/home.py', title='Overview', icon='🏠')
 meeting_page = st.Page('pages/meeting.py', title='Meeting', icon='💼')
 meeting_form_page = st.Page('pages/meetingForm.py', title='New Meeting', icon='➕', url_path="/meeting-form")
 
-agenda_page = st.Page('pages/agenda.py', title='Agenda', icon='📜')
+agenda_page = st.Page('pages/agenda.py', title='Meeting Agenda', icon='📜')
 item_form_page = st.Page('pages/itemForm.py', title='New Item', icon='📖', url_path="/item-form")
 minutes_page = st.Page('pages/minutes.py', title='Note-Taking', icon='📝')
 

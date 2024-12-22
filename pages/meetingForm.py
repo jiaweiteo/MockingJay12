@@ -3,6 +3,7 @@ from backend.controller.meetingController import fetch_meeting_by_id, create_mee
 from datetime import datetime, time, timedelta
 from utils.dateUtils import date_string_to_date_obj, time_string_to_datetime_obj
 from streamlit_extras.switch_page_button import switch_page 
+from utils.constants import Meeting_Status
 
 # Callback function to update end time
 def update_end_time(current_time):
@@ -74,7 +75,8 @@ with st.form("meeting_form"):
             "minutesTaken": 0,
             "location": location,
             "createdBy": "Admin",
-            "createdOn": datetime.now().timestamp()
+            "createdOn": datetime.now().timestamp(),
+            "status": Meeting_Status.CURATION.value,
         }
         create_meeting(meeting_data)
         st.success("Meeting details submitted successfully!")
