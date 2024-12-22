@@ -29,7 +29,7 @@ def display_items(items):
     for item in items:
         status_color = get_status_color(item["status"])
         with st.container():
-            col1, col2, _ = st.columns([1, 1, 1])
+            col1, col2 = st.columns([4,1])
             with col1:
                 st.markdown(
                     f"""
@@ -116,10 +116,10 @@ def display_meeting():
         with st.container():
             
             # Create two columns for better layout
-            col1, col2 = st.columns(2)
+            details_col, demand_col = st.columns(2)
             
             # Left column content
-            with col1:
+            with details_col:
                 st.subheader("Details", divider="green")
                 st.write(f"**Date:**       {format_date(meeting_details['meetingDate'])}")
                 st.write(f"**Time:**       {meeting_details['startTime']} - {meeting_details['endTime']}")
@@ -136,7 +136,7 @@ def display_meeting():
                             st.session_state.delete_meeting_modal = True
 
             # Right column content
-            with col2:
+            with demand_col:
                 total_minutes = meeting_details['totalDuration']
                 minutes_taken = get_total_duration(meeting_id)
                 st.subheader("Demand", divider=True)
@@ -150,43 +150,45 @@ def display_meeting():
             handle_delete_meeting(meeting_id, meeting_details["meetingTitle"])
 
         with st.container():
-            st.subheader("Items Registered", divider="orange")
-            st.link_button(label="Register New Item", url=f"/item-form?id={meeting_details['id']}", icon="📖")
-            display_items(get_sorted_items_by_id(meeting_id))
+            items_col, attendance_col = st.columns(2)
+            with items_col:
+                st.subheader("Items Registered", divider="orange")
+                st.link_button(label="Register New Item", url=f"/item-form?meeting-id={meeting_details['id']}", icon="📖")
+                display_items(get_sorted_items_by_id(meeting_id))
+
+                if st.session_state.delete_item is not None:
+                    print(st.session_state.delete_item)
+                    item = st.session_state.delete_item
+                    handle_delete_item(item["id"], item['title'])
 
 
-        if st.session_state.delete_item is not None:
-            print(st.session_state.delete_item)
-            item = st.session_state.delete_item
-            handle_delete_item(item["id"], item['title'])
+            with attendance_col:
+                st.subheader("Attendance", divider="violet")
+                data = fetch_nonselect_attendance_by_meetingid(meeting_id)
+                df = pd.DataFrame(
+                    data,
+                    columns=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Attendance", "Role", "Remarks"]
+                    )
 
-
-        with st.container():
-            st.subheader("Attendance", divider="violet")
-            data = fetch_nonselect_attendance_by_meetingid(meeting_id)
-            df = pd.DataFrame(
-                data,
-                columns=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Attendance", "Role", "Remarks"]
+                edited_df = st.data_editor(
+                    df, 
+                    disabled=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Role"], 
+                    use_container_width=True,
+                    num_rows = "dynamic",
+                    column_config={
+                        "PerNum": st.column_config.NumberColumn(format="%d"),
+                        "Attendance": st.column_config.CheckboxColumn(default=True)
+                    },
+                    key="nonselect_attendance"
+                    )
+                has_uncommitted_changes = any(len(v) for v in st.session_state.nonselect_attendance.values())
+                st.button(
+                    "Update Attendance",
+                    type="primary",
+                    disabled=not has_uncommitted_changes,
+                    # Update data in database
+                    on_click=update_nonselect_attendance_by_meetingid,
+                    args=(df, st.session_state.nonselect_attendance,meeting_id),
                 )
-
-            edited_df = st.data_editor(
-                df, 
-                disabled=["PerNum", "Name", "Designation", "MeetingId", "ItemID", "Role"], 
-                num_rows = "dynamic",
-                column_config={
-                    "PerNum": st.column_config.NumberColumn(format="%d"),
-                    "Attendance": st.column_config.CheckboxColumn(default=True)
-                },
-                key="nonselect_attendance"
-                )
-            has_uncommitted_changes = any(len(v) for v in st.session_state.nonselect_attendance.values())
-            st.button(
-                "Update Attendance",
-                type="primary",
-                disabled=not has_uncommitted_changes,
-                # Update data in database
-                on_click=update_nonselect_attendance_by_meetingid,
-                args=(df, st.session_state.nonselect_attendance,meeting_id),
-            )
 
 display_meeting()

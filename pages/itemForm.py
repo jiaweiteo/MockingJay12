@@ -100,8 +100,10 @@ def register_item_page():
     item_id = meeting_id = None
     register = update = None
     meetings = load_meeting_data()
-    if st.query_params.get('meeting-id') is not None and st.query_params.get('id') is not None:
+    if st.query_params.get('meeting-id') is not None:
         meeting_id = st.query_params['meeting-id']
+
+    if st.query_params.get('id') is not None:
         item_id = st.query_params.get('id')
         item_details = get_item_by_id(item_id)
 
@@ -120,7 +122,8 @@ def register_item_page():
     actual, _ = st.columns([3, 2])
     with actual:
         with st.form("register_item_form"):
-            if item_id is None:
+            print(meeting_id)
+            if meeting_id is None:
                 meeting_date_df = st.selectbox(    
                     "Date of Meeting",
                     options=meetings_df,

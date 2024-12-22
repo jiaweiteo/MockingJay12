@@ -38,11 +38,11 @@ role = st.session_state.role
 
 home_page = st.Page('pages/home.py', title='Overview', icon='🏠')
 
-meeting_page = st.Page('pages/meeting/meeting.py', title='Meeting', icon='💼')
-meeting_form_page = st.Page('pages/meeting/meetingForm.py', title='New Meeting', icon='➕', url_path="/meeting-form")
+meeting_page = st.Page('pages/meeting.py', title='Meeting', icon='💼')
+meeting_form_page = st.Page('pages/meetingForm.py', title='New Meeting', icon='➕', url_path="/meeting-form")
 
-agenda_page = st.Page('pages/preMeeting/agenda.py', title='Agenda', icon='📜')
-item_form_page = st.Page('pages/preMeeting/itemForm.py', title='New Item', icon='📖', url_path="/item-form")
+agenda_page = st.Page('pages/agenda.py', title='Agenda', icon='📜')
+item_form_page = st.Page('pages/itemForm.py', title='New Item', icon='📖', url_path="/item-form")
 minutes_page = st.Page('pages/minutes.py', title='Note-Taking', icon='📝')
 
 dependencies_page = st.Page('pages/dependencies.py', title='Dependencies')
@@ -57,13 +57,11 @@ secretariat_pages = {
   'Home': [
       home_page,
       meeting_page,
-      meeting_form_page,
+      item_form_page,
     ],
-    'Pre-Meeting': [
-        item_form_page,
+    'For Secetariat': [
+        meeting_form_page,
         agenda_page,
-    ],
-    'Meeting': [
         minutes_page,
     ],
     'Admin': [
