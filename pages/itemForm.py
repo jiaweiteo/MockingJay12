@@ -7,10 +7,9 @@ from datetime import datetime
 from streamlit_extras.switch_page_button import switch_page
 from streamlit_extras import stylable_container
 from utils.dateUtils import format_date
-from utils.constants import Item_Status
+from utils.constants import Item_Status, Purpose_Lookup
 
-
-purposeLookup = [":blue[Tier 1 (For Approval)]", ":blue[Tier 1 (For Discussion)]", ":orange[Tier 2 (For Information)]"]
+purposeLookup = [f":blue[{Purpose_Lookup.APPROVAL.value}]]", f":blue[{Purpose_Lookup.DISCUSSION.value}]", f":orange[{Purpose_Lookup.INFO.value}]"]
 selectLookup = ["Non-Select", "Select"]
 
 
