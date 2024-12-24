@@ -5,6 +5,23 @@ from backend.controller.itemController import *
 from backend.controller.attendanceController import *
 from pages.meeting import display_meeting
 from utils.dateUtils import format_date
+from utils.commonUtils import get_purpose_color_and_value
+
+def style_df(col):
+    styled_col = [""] * col.size
+    if col.name == "purpose":
+        styled_col = []
+        purpose_colors ={
+            "Tier 1 (For Approval)": "background-color: #a6ccf5",
+            "Tier 1 (For Discussion)": "background-color: #a6ccf5",
+            "Tier 2 (For Information)": "background-color: #f7d18b",
+        }
+        for _, value in col.items():
+            styled_col.append(purpose_colors.get(value))
+        
+    return styled_col
+
+
 
 def format_meeting_title(meeting: Dict) -> str:
     date_str = meeting.get('meetingDate', '')
@@ -16,66 +33,81 @@ def format_meeting_title(meeting: Dict) -> str:
             return meeting['meetingTitle']
     return meeting['meetingTitle']
 
+def get_select_flag_value(flag: int) -> str:
+    return ":blue[Select]" if flag == 1 else "Non-Select"
+
 def displayAgenda(meeting_details):
-    st.subheader("Items", divider=True)
+    st.subheader("Meeting Items", divider=True)
 
     # Get agenda items for selected meeting
     agenda_items = get_sorted_items_by_id(meeting_details["id"])
-    print(agenda_items)
-    df = pd.DataFrame(
-    agenda_items,
-    )
-
     # Convert to DataFrame for editing
     if agenda_items:
-        # Create an editable dataframe
+        formatted_agenda = agenda_items.copy()  # Create a copy to avoid modifying original data
+        for item in formatted_agenda:
+            item["selectFlag"] = get_select_flag_value(item["selectFlag"])
+            _, purpose_value = get_purpose_color_and_value(item["purpose"])
+            item["purpose"] = purpose_value
+
+
+        df = pd.DataFrame(
+        formatted_agenda,
+        columns=["id", "title", "description", "purpose", "selectFlag", "itemOwner", "additionalAttendees", "duration", "status"]
+        )
+        # Apply the styling
+        df = df.style.apply(style_df)
+        # Create an editable dataframe, secretariat can only edit duration and status of item
         edited_df = st.data_editor(
             df,
             column_config={
-                "id": st.column_config.NumberColumn(
-                    "ID",
-                    disabled=True,
-                    required=True
-                ),
-                "meetingId": st.column_config.NumberColumn(
-                    "Meeting ID",
-                    disabled=True,
-                    required=True
-                ),
-                "itemTitle": st.column_config.TextColumn(
+                "id": None,
+                "title": st.column_config.TextColumn(
                     "Title",
+                    required=True,
+                    # disabled=True,
+                ),
+                "description": st.column_config.TextColumn(
+                    "Description",
+                    width="large",
+                    disabled=True,
+                ),
+                "selectFlag": st.column_config.SelectboxColumn(
+                    "Select/Non-Select",
+                    options=["Select", "Non-Select"],
+                    required=True,
+                    disabled=True,
+                ),
+                "purpose": st.column_config.TextColumn(
+                    "Purpose",
+                    width="medium",
+                    disabled=True,
+                ),
+                "itemOwner": st.column_config.TextColumn(
+                    "Item Owner",
+                    required=True,
+                    disabled=True,
+                ),
+                "additionalAttendees": st.column_config.TextColumn(
+                    "Additional Attendees",
+                    width="medium",
+                    disabled=True,
+                ),
+                "duration": st.column_config.NumberColumn(
+                    "Duration (minutes)",
+                    min_value=0,
+                    max_value=30,
                     required=True
                 ),
                 "status": st.column_config.SelectboxColumn(
                     "Status",
                     options=["Pending", "Approved", "Waitlisted", "Rejected"],
-                    required=True
+                    required=True,
+                    width="medium",
+                    help="Select the status of the agenda item",
                 ),
-                "description": st.column_config.TextColumn(
-                    "Description",
-                    width="large"
-                ),
-                "duration": st.column_config.NumberColumn(
-                    "Duration (minutes)",
-                    min_value=0,
-                    max_value=480,
-                    required=True
-                ),
-                "purpose": st.column_config.TextColumn(
-                    "Purpose",
-                    width="medium"
-                ),
-                "owner": st.column_config.TextColumn(
-                    "Owner",
-                    required=True
-                ),
-                "additionalAttendees": st.column_config.TextColumn(
-                    "Additional Attendees",
-                    width="medium"
-                )
             },
-            hide_index=True,
             num_rows="dynamic",
+            use_container_width=True,
             key="agenda_editor"
         )
         

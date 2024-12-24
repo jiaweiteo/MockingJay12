@@ -7,29 +7,7 @@ from utils.dateUtils import *
 from utils.constants import Role
 from streamlit_extras.switch_page_button import switch_page 
 import pandas as pd
-import re
-
-def get_status_color(status):
-    """
-    Return the color code for the given status.
-    """
-    status_colors = {
-        "Pending": "blue",
-        "Registered": "green",
-        "Waitlist": "yellow",
-        "Rejected": "red",
-    }
-    return status_colors.get(status, "gray")  # Default to gray for unknown statuses
-
-def get_purpose_color_and_value(purpose):
-    pattern = r':(\w+)\[(.*?)\]'
-    match = re.match(pattern, purpose)
-    
-    if match:
-        color = match.group(1)
-        content = match.group(2)
-        return color, content
-    return None, None
+from utils.commonUtils import get_purpose_color_and_value, get_status_color
 
 def display_items(items):
     if not items:
