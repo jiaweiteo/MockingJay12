@@ -4,6 +4,7 @@ from pathlib import Path
 import sqlite3
 import pandas as pd
 from dataclasses import dataclass
+from utils.constants import Purpose_Lookup
 
 @dataclass
 class MeetingItem:
@@ -20,6 +21,7 @@ class MeetingItem:
     additionalAttendees: str
     createdBy: str
     createdOn: int
+    itemOrder: int
 
 def connect_item_db():
     """Connects to the sqlite database."""
@@ -53,7 +55,8 @@ def initialize_item_table(conn):
             additionalAttendees TEXT,
             status TEXT,
             createdBy TEXT,
-            createdOn INTEGER
+            createdOn INTEGER,
+            itemOrder INTEGER,
         )
         """
     )
@@ -72,8 +75,8 @@ def create_item(item_data):
         dict: The inserted item with its ID.
     """
     query = """
-    INSERT INTO Item (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Item (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn, itemOrder)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     values = (
         item_data["meetingId"],
@@ -87,7 +90,8 @@ def create_item(item_data):
         item_data["additionalAttendees"],
         item_data["status"],
         item_data["createdBy"],
-        item_data["createdOn"]
+        item_data["createdOn"],
+        item_data["itemOrder"],
     )
 
     with connect_item_db() as conn:
@@ -146,7 +150,7 @@ def update_agenda_table_data(styler_df, changes):
     cursor = conn.cursor()
 
     if changes["edited_rows"]:
-        deltas = st.session_state.agenda_editor["edited_rows"]
+        deltas = st.session_state.tier1_agenda_editor["edited_rows"]
         rows = []
         for i, delta in deltas.items():
             row_dict = df.iloc[i].to_dict()
@@ -157,6 +161,7 @@ def update_agenda_table_data(styler_df, changes):
             """
             UPDATE item
             SET
+                itemOrder = :itemOrder,
                 duration = :duration,
                 status = :status
             WHERE id = :id
@@ -175,15 +180,61 @@ def update_agenda_table_data(styler_df, changes):
         cursor.executemany(
             """
             INSERT INTO item
-                    (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn)
+                    (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn, itemOrder)
             VALUES
-                (:meetingId, :title, :description, :purpose, :tier, :selectFlag, :duration, :itemOwner, :additionalAttendees, :status, :createdBy, :createdOn)
+                (:meetingId, :title, :description, :purpose, :tier, :selectFlag, :duration, :itemOwner, :additionalAttendees, :status, :createdBy, :createdOn, :itemOrder)
             """,
             (defaultdict(lambda: None, row) for row in changes["added_rows"]),
         )
 
     conn.commit()
     conn.close()
+
+def update_status_table_data(styler_df, changes):
+    df = styler_df.data
+    conn = connect_item_db()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if changes["edited_rows"]:
+        deltas = st.session_state.tier2_agenda_editor["edited_rows"]
+        rows = []
+        for i, delta in deltas.items():
+            row_dict = df.iloc[i].to_dict()
+            row_dict.update(delta)
+            rows.append(row_dict)
+
+        cursor.executemany(
+            """
+            UPDATE item
+            SET
+                status = :status
+            WHERE id = :id
+            """,
+            rows,
+            )
+
+    if changes["deleted_rows"]:
+        cursor.executemany(
+            "DELETE FROM item WHERE id = :id",
+            ({"id": int(df.loc[i, "id"])} for i in changes["deleted_rows"]),
+        )
+
+    
+    if changes["added_rows"]:
+        cursor.executemany(
+            """
+            INSERT INTO item
+                    (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn, itemOrder)
+            VALUES
+                (:meetingId, :title, :description, :purpose, :tier, :selectFlag, :duration, :itemOwner, :additionalAttendees, :status, :createdBy, :createdOn, :itemOrder)
+            """,
+            (defaultdict(lambda: None, row) for row in changes["added_rows"]),
+        )
+
+    conn.commit()
+    conn.close()
+
 
 
 # Helper function to fetch a single item by ID
@@ -218,24 +269,43 @@ def get_sorted_items_by_id(meeting_id):
     query = """
     SELECT * FROM Item
     WHERE meetingId = ?
-    """
-    
-    # Priority order for sorting
-    purpose_order = {
-        "Tier 1 (For Approval)": 1,
-        "Tier 1 (For Discussion)": 2,
-        "Tier 2 (For Information)": 3,
-    }
-    
+    """    
     with connect_item_db() as conn:
         df = pd.read_sql_query(query, conn, params=(meeting_id,))
         
     if df.empty:
         return []
     
-    df["purpose_order"] = df["purpose"].map(purpose_order)
-    sorted_df = df.sort_values(by="purpose_order").drop(columns=["purpose_order"])
+    sorted_df = df.sort_values(
+            ['purpose'], 
+            ascending=[True],
+            na_position='last'
+        )
+    
     return sorted_df.to_dict(orient="records")
+
+# Retrieve items by meeting_id and sort them by purpose
+def get_items_by_id_and_tier(meeting_id, tier):
+    query = """
+    SELECT * FROM Item
+    WHERE meetingId = ?
+    AND tier = ?
+    """
+
+    with connect_item_db() as conn:
+        df = pd.read_sql_query(query, conn, params=(meeting_id,tier,))
+        
+    if df.empty:
+        return []
+    
+    sorted_df = df.sort_values(
+            ['itemOrder', 'purpose'], 
+            ascending=[True, True],
+            na_position='last'
+        )
+    
+    return sorted_df.to_dict(orient="records")
+
 
 def get_total_duration(meeting_id: int) -> int:
     """
