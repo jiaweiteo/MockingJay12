@@ -19,8 +19,8 @@ def display_items(items):
         status_color = get_status_color(item["status"])
         tier_color, tier_value = get_purpose_color_and_value(item["purpose"])
         with st.container():
-            col1, col2 = st.columns([4,1])
-            with col1:
+            item_col, item_buttons_col = st.columns([4,1])
+            with item_col:
                 st.markdown(
                     f"""
                     <div style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 16px; background-color: #f9f9f9;">
@@ -35,7 +35,7 @@ def display_items(items):
                     """,
                     unsafe_allow_html=True,
                 )
-            with col2:
+            with item_buttons_col:
                 st.link_button(label="Edit Item", url=f"/item-form?meeting-id={item['meetingId']}&id={item['id']}", icon="📝")
                 if st.button(f"Delete Item", key=item["id"], icon='🗑️'):
                     st.session_state.delete_item = item
@@ -119,10 +119,10 @@ def display_meeting(meeting_id, meeting_details):
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 if st.session_state.role == Role.SECRETARIAT.value:
-                    col3, col4 = st.columns([1,3])
-                    with col3:
+                    edit_meeting_col, del_meeting_col = st.columns([1,3])
+                    with edit_meeting_col:
                         st.link_button(label="Edit Meeting", url=f"/meeting-form?id={meeting_details['id']}", icon="📝")
-                    with col4:
+                    with del_meeting_col:
                         if st.button("Delete Meeting", key=f"meetingId={meeting_id}", icon='🗑️'):
                             st.session_state.delete_meeting_modal = True
 

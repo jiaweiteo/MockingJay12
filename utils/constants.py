@@ -20,7 +20,7 @@ Meeting_Status = Enum('Meeting_Status',
                     ('APPROVED_BY_HEAD', "Approved (Head)"),
                     ('CIRCULATED', "Circulated"),
                     ("COMPLETED", "Completed"),
-                    ('REJECTED', "REJECTED")])
+                    ('REJECTED', "Rejected")])
 
 Purpose_Lookup = Enum('Purpose_Lookup',
                       [("APPROVAL", "Tier 1 (For Approval)"),

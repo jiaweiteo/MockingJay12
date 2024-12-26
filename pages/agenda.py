@@ -6,7 +6,8 @@ from backend.controller.attendanceController import *
 from pages.meeting import display_meeting
 from utils.dateUtils import format_date
 from utils.commonUtils import get_purpose_color_and_value
-from utils.constants import Purpose_Lookup
+from utils.constants import Purpose_Lookup, Meeting_Status
+from backend.controller.emailController import send_agenda_email, send_item_email
 
 def get_item_column_config(agenda_size : int):
     return {
@@ -62,6 +63,11 @@ def get_item_column_config(agenda_size : int):
             width="medium",
             help="Select the status of the agenda item",
         ),
+        "email": st.column_config.LinkColumn(
+            "Send Email", 
+            display_text="Email",
+            disabled=True,
+        ),
     }
 
 def style_df(col):
@@ -94,7 +100,27 @@ def get_select_flag_value(flag: int) -> str:
     return ":blue[Select]" if flag == 1 else "Non-Select"
 
 def displayAgenda(meeting_details):
-    st.subheader("Meeting Items", divider=True)
+    st.subheader("Meeting Agenda Items", divider=True)
+    agenda_status = st.selectbox(    
+        label="Agenda Status",
+        options=[e.value for e in Meeting_Status],
+        index = list(Meeting_Status).index(Meeting_Status(meeting_details["status"])),
+        # value=meeting_details['status']
+    )
+    edit_status_col, create_email_col = st.columns([2,10])
+    with edit_status_col:
+        st.button(
+            "Update Agenda Status",
+            disabled= agenda_status == meeting_details["status"],
+            # Update data in database
+            on_click=update_meeting_status,
+            args=(meeting_details["id"], agenda_status),
+            key='update_agenda_status'
+            )
+    with create_email_col:
+        if agenda_status != "Curation":
+            send_agenda_email(meeting_details["id"], agenda_status)
+
     st.subheader("Tier 1 Items")
     # Get agenda items for selected meeting
     tier_1_items = get_items_by_id_and_tier(meeting_details["id"], 1)
@@ -105,11 +131,12 @@ def displayAgenda(meeting_details):
             item["selectFlag"] = get_select_flag_value(item["selectFlag"])
             _, purpose_value = get_purpose_color_and_value(item["purpose"])
             item["purpose"] = purpose_value
+            item["email"] = send_item_email(meeting_details["id"], meeting_details)
 
 
         tier1_df = pd.DataFrame(
         tier_1_agenda,
-        columns=["itemOrder", "id", "title", "description", "purpose", "selectFlag", "itemOwner", "additionalAttendees", "duration", "status"]
+        columns=["itemOrder", "id", "title", "description", "purpose", "selectFlag", "itemOwner", "additionalAttendees", "duration", "status", "email"]
         )
         # Apply the styling
         tier1_df = tier1_df.style.apply(style_df)
@@ -117,7 +144,7 @@ def displayAgenda(meeting_details):
         tier1_edited_df = st.data_editor(
             tier1_df,
             column_config=get_item_column_config(len(tier_1_agenda)),
-            num_rows="dynamic",
+            num_rows="fixed",
             use_container_width=True,
             key="tier1_agenda_editor"
         )
@@ -143,11 +170,12 @@ def displayAgenda(meeting_details):
             item["selectFlag"] = get_select_flag_value(item["selectFlag"])
             _, purpose_value = get_purpose_color_and_value(item["purpose"])
             item["purpose"] = purpose_value
+            item["email"] = send_item_email(meeting_details["id"], meeting_details)
 
 
         df = pd.DataFrame(
         tier_2_agenda,
-        columns=["id", "title", "description", "purpose", "selectFlag", "itemOwner", "additionalAttendees", "status"]
+        columns=["id", "title", "description", "purpose", "selectFlag", "itemOwner", "additionalAttendees", "status", "email"]
         )
         # Apply the styling
         tier2_df = df.style.apply(style_df)
@@ -155,7 +183,7 @@ def displayAgenda(meeting_details):
         tier2_edited_df = st.data_editor(
             tier2_df,
             column_config=get_item_column_config(len(tier_2_agenda)),
-            num_rows="dynamic",
+            num_rows="fixed",
             use_container_width=True,
             key="tier2_agenda_editor"
         )

@@ -3,6 +3,7 @@ import sqlite3
 # from collections import defaultdict
 # import pandas as pd
 from dataclasses import dataclass
+import streamlit as st
 
 @dataclass
 class Meeting:
@@ -179,7 +180,8 @@ def create_meeting(meeting_details):
         cursor = conn.cursor()
         cursor.execute(query, values)
         conn.commit()
-        print("Meeting successfully added.")
+        print("Meeting successfully created.")
+        st.toast("Meeting successfully created.")
 
     except sqlite3.Error as e:
         print(f"An error occurred while inserting the meeting: {e}")
@@ -208,10 +210,37 @@ def update_meeting(meeting_id, updates):
         cursor.execute(query, values)
         conn.commit()
         print("Meeting successfully updated.")
+        st.toast("Meeting successfully updated.")
     except sqlite3.Error as e:
         print(f"An error occurred while updating the meeting: {e}")
 
     conn.close()
+
+def update_meeting_status(meeting_id, new_status):
+    if not new_status:
+        raise ValueError("new_status cannot be empty.")
+
+    # Construct the SQL query dynamically based on the updates
+    query = f"""
+    UPDATE meeting
+    SET status="{new_status}"
+    WHERE id = ?
+    """
+
+    print(query)
+    # Connect to the database and execute the query
+    try:
+        conn, _ = connect_meeting_db()
+        cursor = conn.cursor()
+        cursor.execute(query, (meeting_id,))
+        conn.commit()
+        print("Meeting Agenda Status successfully updated.")
+        st.toast("Meeting Agenda Status successfully updated.")
+    except sqlite3.Error as e:
+        print(f"An error occurred while updating the meeting status: {e}")
+
+    conn.close()
+
 
 def delete_meeting(meeting_id):
     query = """
@@ -225,6 +254,7 @@ def delete_meeting(meeting_id):
         cursor.execute(query, (meeting_id,))
         conn.commit()
         print("Meeting successfully deleted.")
+        st.toast("Meeting successfully deleted.")
     except sqlite3.Error as e:
         print(f"An error occurred while deleting the meeting: {e}")
 

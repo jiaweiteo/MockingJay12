@@ -75,8 +75,8 @@ def create_item(item_data):
         dict: The inserted item with its ID.
     """
     query = """
-    INSERT INTO Item (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn, itemOrder)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Item (meetingId, title, description, purpose, tier, selectFlag, duration, itemOwner, additionalAttendees, status, createdBy, createdOn)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     values = (
         item_data["meetingId"],
@@ -91,7 +91,6 @@ def create_item(item_data):
         item_data["status"],
         item_data["createdBy"],
         item_data["createdOn"],
-        item_data["itemOrder"],
     )
 
     with connect_item_db() as conn:
@@ -100,6 +99,8 @@ def create_item(item_data):
         conn.commit()
         item_id = cursor.lastrowid
         item_data["id"] = item_id
+        st.toast("Item successfully created")
+
     return item_data
 
 # Read items by meetingId
@@ -137,6 +138,7 @@ def update_item(item_id, updated_data):
             cursor.execute(query, values)
             conn.commit()
             print("Item successfully updated.")
+            st.toast("Item successfully updated")
     except sqlite3.Error as e:
         print(f"An error occurred while updating the item: {e}")
 
@@ -187,6 +189,7 @@ def update_agenda_table_data(styler_df, changes):
             (defaultdict(lambda: None, row) for row in changes["added_rows"]),
         )
 
+    st.toast("Item successfully updated")
     conn.commit()
     conn.close()
 
@@ -232,6 +235,7 @@ def update_status_table_data(styler_df, changes):
             (defaultdict(lambda: None, row) for row in changes["added_rows"]),
         )
 
+    st.toast("Item successfully updated")
     conn.commit()
     conn.close()
 
@@ -262,6 +266,7 @@ def delete_item(item_id):
         cursor = conn.cursor()
         cursor.execute(query, (item_id,))
         conn.commit()
+        st.toast("Item successfully deleted")
     return item
 
 # Retrieve items by meeting_id and sort them by purpose
