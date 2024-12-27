@@ -3,13 +3,15 @@ import pandas as pd
 import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, load_meeting_data
 from backend.controller.itemController import create_item, get_item_by_id, update_item
+from backend.controller.attachmentsController import save_attachment, get_attachments_for_item, delete_attachment
 from datetime import datetime
 from streamlit_extras.switch_page_button import switch_page
 from streamlit_extras import stylable_container
 from utils.dateUtils import format_date
 from utils.constants import Item_Status, Purpose_Lookup
+import humanize
 
-purposeLookup = [f":blue[{Purpose_Lookup.APPROVAL.value}]]", f":blue[{Purpose_Lookup.DISCUSSION.value}]", f":orange[{Purpose_Lookup.INFO.value}]"]
+purposeLookup = [f":blue[{Purpose_Lookup.APPROVAL.value}]", f":blue[{Purpose_Lookup.DISCUSSION.value}]", f":orange[{Purpose_Lookup.INFO.value}]"]
 selectLookup = ["Non-Select", "Select"]
 
 
@@ -63,6 +65,18 @@ def get_item_table_dict(meeting_id, form_data_dict):
     }
     return item_data
 
+st.session_state.uploaded_files = None
+def upload_attachments(item_id):
+    if st.session_state.uploaded_files:
+        for file in st.session_state.uploaded_files:
+            # Check if file is already uploaded
+            existing_files = get_attachments_for_item(item_id)
+            if any(file.name == existing["filename"] for existing in existing_files):
+                st.warning(f"File {file.name} already exists! Not saving this file.")
+            else:
+                save_attachment(item_id, file)
+                st.success(f"Successfully uploaded {file.name}")
+    st.session_state.uploaded_files = None
 
 # Function to parse form inputs and create the item
 def handle_form_submission(meeting_id, form_data_dict):
@@ -75,9 +89,11 @@ def handle_form_submission(meeting_id, form_data_dict):
     }
     item_data.update(system_data)
     created_item = create_item(item_data)
+    if st.session_state.uploaded_files is not None:
+        upload_attachments(created_item["id"])
+
     st.success(f"Item '{created_item['title']}' successfully created!")
     st.write(item_data)
-    switch_page("home")
     return created_item
 
 
@@ -86,16 +102,21 @@ def handle_form_update(meeting_id, item_id, form_data_dict):
     item_data = get_item_table_dict(meeting_id, form_data_dict)
     # Call the update_item function
     updated_item = update_item(item_id, item_data)
+    if st.session_state.uploaded_files is not None:
+        upload_attachments(updated_item["id"])
+
     st.success(f"Item '{updated_item['title']}' successfully updated")
     st.write(item_data)
-    switch_page("home")
     return updated_item
 
 
+@st.fragment
 def register_item_page():
     form_data_dict = item_details = {}
     # Parse the meeting_id from query parameters
-    item_id = meeting_id = None
+    global item_id
+    global meeting_id
+    attachments = None
     register = update = None
     meetings = load_meeting_data()
     if st.query_params.get('meeting-id') is not None:
@@ -103,7 +124,10 @@ def register_item_page():
 
     if st.query_params.get('id') is not None:
         item_id = st.query_params.get('id')
+        
+    if item_id is not None:
         item_details = get_item_by_id(item_id)
+        attachments = get_attachments_for_item(item_id)
 
     formatted_data = [
         {"Formatted": f"{meeting['meetingTitle']} ({format_date(meeting['meetingDate'])})", "id": meeting["id"]}
@@ -116,9 +140,21 @@ def register_item_page():
         st.title("Item Registration for DM")
     else:
         st.title("Edit Item for DM")
+    
+    button_html = f"""
+        <a target="_self" href="/meeting?id={meeting_id}" style="text-decoration: none;">
+            <button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+                    Go to Meeting
+            </button>
+        </a>
+        """
+    if (meeting_id is not None):
+        st.markdown(button_html, unsafe_allow_html=True)
 
-    actual, _ = st.columns([3, 2])
-    with actual:
+    st.divider()
+
+    item_details_col, _ = st.columns([4, 2])
+    with item_details_col:
         with st.form("register_item_form"):
             if meeting_id is None:
                 meeting_date_df = st.selectbox(    
@@ -152,7 +188,7 @@ def register_item_page():
                 purpose = st.radio(
                     "Item Purpose",
                     purposeLookup,
-                    index=None,
+                    index=purposeLookup.index(item_details.get("purpose")) if item_details.get("purpose") is not None else 0,
                     key="purpose"
                 )
                 form_data_dict["item_purpose"] = purpose
@@ -160,7 +196,7 @@ def register_item_page():
             with col_duration:
                 form_data_dict["duration"] = st.number_input(
                         "Duration (minutes)",
-                        min_value=5,
+                        min_value=0,
                         max_value=30,
                         step=5,
                         value=item_details.get("duration", 15),
@@ -184,23 +220,80 @@ def register_item_page():
                 default=item_details["additionalAttendees"].split(", ") if item_details.get("additionalAttendees") is not None else None,
                 key="attendees"
             )
-            
+
+            st.session_state.uploaded_files = st.file_uploader(
+                "Upload Attachments", accept_multiple_files=True
+            )
+
+            # Display attachments in a table with actions
             if item_id is None:
                 register = st.form_submit_button("Register Item", type="primary", use_container_width=True)
             else:
                 update = st.form_submit_button("Update Item", type="primary", use_container_width=True)
+        
+        if attachments is not None:
+            st.subheader("Attachments")
+            for attachment in attachments:
+                with st.container():                   
+                    cols = st.columns([5, 1, 1, 1])
+                    
+                    # Column 1: Filename
+                    cols[0].text(attachment['filename'])
+                    
+                    # Column 2: File size
+                    file_size = humanize.naturalsize(attachment['file_size'])
+                    cols[1].text(file_size)
+                    
+                    # Column 3: Download button
+                    file_data = attachment['file_data']  # Get file data
+                    cols[2].download_button(
+                        "📥 Download",
+                        data=file_data,
+                        file_name=attachment['filename'],
+                        mime=attachment['file_type'],
+                        key=f"download_{attachment['id']}"
+                    )
+                    
+                    # Column 4: Delete button
+                    if cols[3].button("🗑️", key=f"delete_{attachment['id']}"):
+                        st.session_state.delete_confirmation = attachment['id']
+
+                    if st.session_state.delete_confirmation == attachment["id"]:
+                        st.warning(f"Are you sure you want to delete {attachment['filename']}?")
+                        col1, col2 = st.columns([1, 1])
+                        
+                        if col1.button("Yes, delete", key=f"confirm_yes_{attachment['id']}"):
+                            if delete_attachment(attachment['id']):
+                                st.success("File deleted successfully!")
+                                st.session_state.delete_confirmation = None
+                                st.rerun()
+                            else:
+                                st.error("Failed to delete file")
+                                st.session_state.delete_confirmation = None
+                        
+                        if col2.button("No, cancel", key=f"confirm_no_{attachment['id']}"):
+                            st.session_state.delete_confirmation = None
+                            st.rerun()
+
+                st.divider()
 
     # Process form submission
     if register:
         if meeting_id is not None:
-            handle_form_submission(meeting_id, form_data_dict)
+            created_item = handle_form_submission(meeting_id, form_data_dict)
+            item_id = created_item["id"]
+            meeting_id = created_item["meetingId"]
+            st.rerun(scope="fragment")
         else:
             st.error("Invalid Meeting ID: " + meeting_id)
     elif update:
         if meeting_id and item_id is not None:
             handle_form_update(meeting_id, item_id, form_data_dict)
+            st.rerun(scope="fragment")
+
         else:
             st.error("Invalid Item ID or Meeting ID: " + item_id + " " + meeting_id)
 
-
+st.session_state.delete_confirmation = None
+item_id = meeting_id = None
 register_item_page()

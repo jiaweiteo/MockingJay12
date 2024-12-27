@@ -180,12 +180,14 @@ def create_meeting(meeting_details):
         cursor = conn.cursor()
         cursor.execute(query, values)
         conn.commit()
+        meeting_id = cursor.lastrowid
         print("Meeting successfully created.")
         st.toast("Meeting successfully created.")
-
+        conn.close()
+        return meeting_id
     except sqlite3.Error as e:
         print(f"An error occurred while inserting the meeting: {e}")
-
+    
     conn.close()
 
 def update_meeting(meeting_id, updates):
@@ -215,6 +217,7 @@ def update_meeting(meeting_id, updates):
         print(f"An error occurred while updating the meeting: {e}")
 
     conn.close()
+    return meeting_id
 
 def update_meeting_status(meeting_id, new_status):
     if not new_status:
@@ -226,8 +229,6 @@ def update_meeting_status(meeting_id, new_status):
     SET status="{new_status}"
     WHERE id = ?
     """
-
-    print(query)
     # Connect to the database and execute the query
     try:
         conn, _ = connect_meeting_db()

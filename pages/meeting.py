@@ -2,6 +2,7 @@ import streamlit as st
 from backend.controller.meetingController import fetch_meeting_by_id, fetch_upcoming_meeting, delete_meeting, load_meeting_data
 from backend.controller.itemController import get_sorted_items_by_id, delete_item, get_total_duration
 from backend.controller.attendanceController import fetch_nonselect_attendance_by_meetingid, update_nonselect_attendance_by_meetingid
+from backend.controller.attachmentsController import get_attachments_for_item, delete_attachment_by_item_id
 from datetime import datetime
 from utils.dateUtils import *
 from utils.constants import Role
@@ -17,6 +18,8 @@ def display_items(items):
     
     # Display items as cards
     for item in items:
+        attachments = get_attachments_for_item(item["id"])
+        file_names = [attachment['filename'] for attachment in attachments]
         status_color = get_status_color(item["status"])
         tier_color, tier_value = get_purpose_color_and_value(item["purpose"])
         with st.container():
@@ -32,12 +35,13 @@ def display_items(items):
                         <p style="margin: 4px 0;"><strong>Duration:</strong> {item['duration']} minutes</p>
                         <p style="margin: 4px 0;"><strong>Owner:</strong> {item['itemOwner']}</p>
                         <p style="margin: 4px 0;"><strong>Additional Attendees:</strong> {item['additionalAttendees'] if item['additionalAttendees'] else "-"}</p>
+                        <p style="margin: 4px 0;"><strong>Attachments:</strong> {", ".join(file_names) if len(file_names) > 0 else "-"}</p>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
             with item_buttons_col:
-                st.link_button(label="Edit Item", url=f"/item-form?meeting-id={item['meetingId']}&id={item['id']}", icon="📝")
+                st.link_button(label="View/Edit Item", url=f"/item-form?meeting-id={item['meetingId']}&id={item['id']}", icon="📝")
                 if st.button(f"Delete Item", key=item["id"], icon='🗑️'):
                     st.session_state.delete_item = item
             
@@ -49,7 +53,11 @@ def confirm_delete_meeting(meeting_id):
 
 def confirm_delete_item(item_id, title):
     delete_item(item_id)
+    attachments = get_attachments_for_item(item_id)
+    if attachments is not None:
+        delete_attachment_by_item_id(item_id)
     st.success(f"Item '{title}' deleted successfully.")
+    st.toast(f"Item '{title}' deleted successfully.")
     st.rerun()
 
 
