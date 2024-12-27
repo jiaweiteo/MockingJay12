@@ -143,7 +143,8 @@ def display_meeting(meeting_id, meeting_details):
                 st.write(f"**Duration:** {total_minutes} minutes")
                 st.write(f"**Time Taken:** {minutes_taken}")
                 st.write(f"**Time Left:** {total_minutes - minutes_taken}")
-                st.progress(minutes_taken / total_minutes)
+                if (minutes_taken / total_minutes <= 1):
+                    st.progress(minutes_taken / total_minutes)
                 st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.delete_meeting_modal:
