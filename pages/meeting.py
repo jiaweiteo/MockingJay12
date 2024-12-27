@@ -1,10 +1,11 @@
 import streamlit as st
-from backend.controller.meetingController import fetch_meeting_by_id, fetch_upcoming_meeting, delete_meeting
+from backend.controller.meetingController import fetch_meeting_by_id, fetch_upcoming_meeting, delete_meeting, load_meeting_data
 from backend.controller.itemController import get_sorted_items_by_id, delete_item, get_total_duration
 from backend.controller.attendanceController import fetch_nonselect_attendance_by_meetingid, update_nonselect_attendance_by_meetingid
 from datetime import datetime
 from utils.dateUtils import *
 from utils.constants import Role
+from utils.commonUtils import format_meeting_title
 from streamlit_extras.switch_page_button import switch_page 
 import pandas as pd
 from utils.commonUtils import get_purpose_color_and_value, get_status_color
@@ -183,5 +184,31 @@ def display_items_and_attendance(meeting_id, meeting_details):
             )
 
 meeting_id, meeting_details = fetch_meeting()
-display_meeting(meeting_id, meeting_details)
-display_items_and_attendance(meeting_id, meeting_details)
+
+# Display select box for users to choose meetings
+meetings = load_meeting_data()
+meetings = sorted(meetings, key=lambda x: x["meetingDate"])
+if not meetings:
+    st.warning("No meetings found in the database.")
+
+# Create a dictionary for easy lookup of meeting IDs
+meeting_dict = {format_meeting_title(meeting): meeting["id"] for meeting in meetings}
+meeting_title_list = list(meeting_dict.keys())
+
+# Meeting selector using formatted titles
+selected_meeting_title = st.selectbox(
+    "Select Meeting",
+    options=meeting_title_list,
+    index=list(meeting_dict.values()).index(int(meeting_id))
+)
+
+# Get the selected meeting ID
+selected_meeting_id = meeting_dict[selected_meeting_title]
+
+if (meeting_id != selected_meeting_id):
+    selected_meeting_details = fetch_meeting_by_id(selected_meeting_id)
+    display_meeting(selected_meeting_id, selected_meeting_details)
+    display_items_and_attendance(selected_meeting_id, selected_meeting_details)
+else:
+    display_meeting(meeting_id, meeting_details)
+    display_items_and_attendance(meeting_id, meeting_details)

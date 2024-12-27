@@ -5,7 +5,7 @@ from backend.controller.itemController import *
 from backend.controller.attendanceController import *
 from pages.meeting import display_meeting
 from utils.dateUtils import format_date
-from utils.commonUtils import get_purpose_color_and_value
+from utils.commonUtils import get_purpose_color_and_value, format_meeting_title
 from utils.constants import Purpose_Lookup, Meeting_Status
 from backend.controller.emailController import send_agenda_email, send_item_email
 
@@ -83,18 +83,6 @@ def style_df(col):
             styled_col.append(purpose_colors.get(value))
         
     return styled_col
-
-
-
-def format_meeting_title(meeting: Dict) -> str:
-    date_str = meeting.get('meetingDate', '')
-    if date_str:
-        try:
-            date = format_date(date_str)
-            return f"{meeting['meetingTitle']} ({date})"
-        except ValueError:
-            return meeting['meetingTitle']
-    return meeting['meetingTitle']
 
 def get_select_flag_value(flag: int) -> str:
     return ":blue[Select]" if flag == 1 else "Non-Select"
